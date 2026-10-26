@@ -578,6 +578,7 @@
     "complaint_resolved": "Report closed with feedback for the reporter.",
     "reset_code_sent": "A 6-digit code was sent to {email}. It is valid for 10 minutes.",
     "reset_code_demo": "SMTP is not configured, so here is your code: {code}. Enter it on the next page.",
+    "reset_sent_to_admin": "If an account with that identifier exists, a password reset request has been sent to the administrator. The administrator will send a reset link or PIN to you.",
     "reset_code_sent_generic": "If that account exists, a code was sent to its email address.",
     "reset_code_invalid": "That code is not valid or has expired. Request a new one.",
     "register_done": "Account created! You can log in now."

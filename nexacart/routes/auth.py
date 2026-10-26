@@ -233,6 +233,44 @@ def forgot_password():
         user = models.get_user_by_identifier(identifier) if identifier else None
 
         if user is not None:
+            if user["role"] == "admin":
+                models.purge_password_codes(user["id"])
+                code = f"{secrets.randbelow(1000000):06d}"
+                models.create_password_code(user["id"], models.hash_token(code))
+                models.log_audit(
+                    "password_reset_requested", user["id"], user["username"],
+                    None, security.client_ip(),
+                )
+                sent = False
+                try:
+                    from .. import mailer
+                    recipient = current_app.config.get("ADMIN_NOTIFY_EMAIL") or user["email"]
+                    sent = mailer.send(
+                        recipient,
+                        f"{current_app.config['APP_NAME']} password reset code",
+                        t("mail.reset_code_body", name=user["full_name"], code=code),
+                    )
+                except Exception as error:
+                    current_app.logger.warning("reset email failed: %s", error)
+
+                if sent:
+                    flash(t("flash.reset_code_sent", email=current_app.config.get("ADMIN_NOTIFY_EMAIL") or user["email"]), "info")
+                else:
+                    flash(t("flash.reset_code_demo", code=code), "warning")
+                return redirect(url_for("auth.verify_reset_code"))
+
+            if user["role"] in ("buyer", "seller"):
+                models.log_audit(
+                    "password_reset_requested", user["id"], user["username"],
+                    "routed_to_admin", security.client_ip(),
+                )
+                try:
+                    models.create_admin_password_reset(user["id"])
+                except Exception as error:
+                    current_app.logger.warning("admin reset request failed: %s", error)
+                flash(t("flash.reset_sent_to_admin"), "info")
+                return redirect(url_for("auth.login"))
+
             models.purge_password_codes(user["id"])
             code = f"{secrets.randbelow(1000000):06d}"
             models.create_password_code(user["id"], models.hash_token(code))
