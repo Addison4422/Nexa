@@ -1,0 +1,15 @@
+HTTP/1.1 308 PERMANENT REDIRECT
+Server: Werkzeug/3.0.4 Python/3.12.10
+Date: Thu, 22 Oct 2026 21:58:01 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 241
+Location: http://127.0.0.1:5000/cart/
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: geolocation=(), microphone=(), camera=()
+Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'none'
+Cache-Control: no-store
+Vary: Cookie
+Connection: close
+

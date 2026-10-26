@@ -1,0 +1,152 @@
+﻿{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('cart.page_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('cart.eyebrow') }}</p>
+    <h1>{{ t('cart.title') }}</h1>
+    <p class="muted">{{ t('cart.subtitle') }}</p>
+  </div>
+  <div class="page-head-actions">
+    <a class="btn btn-outline" href="{{ url_for('product.catalogue') }}">
+      {{ icon('arrow-left', 16) }} {{ t('cart.continue_shopping') }}
+    </a>
+  </div>
+</div>
+
+{% if not cart["items"] %}
+  <div class="card empty-card">
+    <span class="empty-icon">{{ icon('cart', 48) }}</span>
+    <h2>{{ t('cart.empty_title') }}</h2>
+    <p>{{ t('cart.empty_text') }}</p>
+    <a class="btn btn-primary" href="{{ url_for('product.catalogue') }}">
+      {{ t('cart.continue_shopping') }} {{ icon('arrow-right', 16) }}
+    </a>
+  </div>
+{% else %}
+  <form id="cart-form" data-update-template="{{ url_for('cart.update', cart_id=0) }}"
+        data-remove-template="{{ url_for('cart.remove', cart_id=0) }}"
+        data-label-stock="{{ t('cart.stock_available') }}"
+        data-label-out="{{ t('cart.out_of_stock') }}"
+        data-text-error="{{ t('cart.err.update_failed') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">{{ t('cart.col_item') }}</th>
+            <th scope="col" style="text-align:end">{{ t('cart.col_price') }}</th>
+            <th scope="col">{{ t('cart.col_quantity') }}</th>
+            <th scope="col" style="text-align:end">{{ t('cart.col_subtotal') }}</th>
+            <th scope="col">{{ t('cart.col_action') }}</th>
+          </tr>
+        </thead>
+        <tbody id="cart-body">
+          {% for line in cart["items"] %}
+          <tr data-cart-id="{{ line['cart_id'] }}">
+            <td>
+              <div class="cell-user">
+                {% set image_url = url_for('product.product_image', filename=line['product']['image_path']) if line['product']['image_path'] else '' %}
+                {% if image_url %}<img src="{{ image_url }}" class="product-thumb" alt="">{% endif %}
+                <div class="mini-main">
+                  <div class="mini-title">{{ line['product']['name'] }}</div>
+                  <div class="muted small">{{ icon('store', 12) }} {{ line['product']['seller'] }}</div>
+                  <div class="muted small">
+                    {% if line['product']['stock_quantity'] <= 0 %}
+                      {{ t('cart.out_of_stock') }}
+                    {% else %}
+                      {{ t('cart.stock_available', n=line['product']['stock_quantity']) }}
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td class="price-cell" style="text-align:end" data-price="{{ line['price_cents'] }}">
+              {% if line['discount_percent'] %}
+                <span class="price-sale">{{ line['price_cents']|money }}</span>
+                <s class="price-was">{{ line['list_price_cents']|money }}</s>
+              {% else %}
+                {{ line['price_cents']|money }}
+              {% endif %}
+            </td>
+            <td>
+              <div class="qty-control">
+                <button class="qty-btn qty-minus" type="button" data-cart-id="{{ line['cart_id'] }}">
+                  {{ icon('minus', 16) }}
+                </button>
+                <input class="qty-input" type="number" min="1"
+                       max="{{ line['product']['stock_quantity'] }}"
+                       value="{{ line['quantity'] }}"
+                       data-cart-id="{{ line['cart_id'] }}">
+                <button class="qty-btn qty-plus" type="button" data-cart-id="{{ line['cart_id'] }}">
+                  {{ icon('plus', 16) }}
+                </button>
+              </div>
+              {% if line['at_limit'] %}
+                <p class="small muted stock-note">{{ t('cart.at_stock_limit') }}</p>
+              {% endif %}
+            </td>
+            <td class="subtotal-cell" style="text-align:end">{{ line['subtotal_cents']|money }}</td>
+            <td class="cell-actions">
+              <button class="btn btn-ghost btn-sm remove-item" type="button" data-cart-id="{{ line['cart_id'] }}"
+                      aria-label="{{ t('cart.remove', name=line['product']['name']) }}">
+                {{ icon('trash', 16) }}
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="cart-totals">
+      <div class="totals-row"><span>{{ t('cart.subtotal') }}</span>
+        <span id="cart-subtotal">{{ cart["subtotal_cents"]|money }}</span></div>
+      {% if promo and promo['kind'] == 'discount' %}
+      <div class="totals-row totals-row-discount">
+        <span>{{ t('checkout.promo_applied', code=promo['code']) }} (-{{ promo['percent'] }}%)</span>
+        <span>-{{ promo_cents|money }}</span>
+      </div>
+      {% endif %}
+    </div>
+
+    <form method="post" action="{{ url_for('checkout.apply_promo') }}" class="promo-apply-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label class="visually-hidden" for="promo-code">{{ t('checkout.promo_label') }}</label>
+      <input class="input promo-code-input" id="promo-code" name="code" maxlength="4"
+             inputmode="numeric" placeholder="{{ t('checkout.promo_placeholder') }}"
+             value="{{ promo['code'] if promo and promo['kind'] == 'discount' else '' }}">
+      {% if promo and promo['kind'] == 'discount' %}
+        <button class="btn btn-outline btn-sm" type="submit" name="remove" value="1">{{ t('checkout.promo_remove') }}</button>
+      {% else %}
+        <button class="btn btn-accent btn-sm" type="submit">{{ icon('tag', 15) }} {{ t('checkout.promo_apply') }}</button>
+      {% endif %}
+    </form>
+
+    <div class="cart-actions">
+      {% if cart["subtotal_cents"] > 0 %}
+        <a class="btn btn-primary btn-lg" href="{{ url_for('checkout.index') }}">
+          {{ icon('credit-card', 18) }} {{ t('cart.checkout') }}
+        </a>
+        <span class="checkout-note muted small">{{ t('cart.checkout_note') }}</span>
+      {% endif %}
+      <a class="btn btn-outline btn-sm" href="{{ url_for('cart.clear') }}" data-confirm="{{ t('cart.confirm_clear') }}">
+        {{ icon('trash', 16) }} {{ t('cart.clear') }}
+      </a>
+    </div>
+  </form>
+
+  <div class="alert alert-info">
+    {{ icon('info', 16) }} {{ t('cart.hint_qty') }}
+  </div>
+{% endif %}
+
+<!-- Hidden SVG templates so the JS re-render can clone real icons. -->
+<div id="cart-icon-templates" class="visually-hidden" aria-hidden="true">
+  <span class="tpl-minus">{{ icon('minus', 16) }}</span>
+  <span class="tpl-plus">{{ icon('plus', 16) }}</span>
+  <span class="tpl-trash">{{ icon('trash', 16) }}</span>
+</div>
+{% endblock %}

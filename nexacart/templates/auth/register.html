@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('register.page_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="auth-layout auth-layout-wide">
+  <section class="card auth-card">
+    <header class="card-head">
+      <span class="feature-icon" aria-hidden="true">{{ icon('user', 22) }}</span>
+      <h1>{{ t('register.title') }}</h1>
+      <p class="muted">{{ t('register.subtitle') }}</p>
+    </header>
+
+    {% if errors %}
+      <div class="alert alert-error" role="alert">
+        <span class="alert-icon" aria-hidden="true">{{ icon('alert', 18) }}</span>
+        <div class="alert-text">
+          <p><strong>{{ t('register.error_title') }}</strong></p>
+          <ul class="alert-list">
+            {% for field, message in errors.items() %}
+              <li><a href="#field-{{ field }}">{{ message }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('auth.register') }}" novalidate
+          data-password-rules="{{ password_rules|length }}"
+          data-password-min="{{ password_min }}"
+          data-password-max="{{ password_max }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="form-field" id="field-full_name">
+        <label for="full_name">{{ t('register.full_name') }}</label>
+        <input class="input{% if errors.full_name %} input-invalid{% endif %}" type="text" id="full_name"
+               name="full_name" required autocomplete="name" value="{{ form.full_name }}"
+               placeholder="{{ t('register.full_name_placeholder') }}"
+               aria-describedby="hint-full_name{% if errors.full_name %} error-full_name{% endif %}">
+        <p class="hint" id="hint-full_name">{{ t('register.full_name_hint') }}</p>
+        {% if errors.full_name %}<p class="field-error" id="error-full_name">{{ errors.full_name }}</p>{% endif %}
+      </div>
+
+      <div class="form-field" id="field-username">
+        <label for="username">{{ t('register.username') }}</label>
+        <input class="input{% if errors.username %} input-invalid{% endif %}" type="text" id="username"
+               name="username" required autocomplete="username" value="{{ form.username }}"
+               placeholder="{{ t('register.username_placeholder') }}"
+               aria-describedby="hint-username{% if errors.username %} error-username{% endif %}">
+        <p class="hint" id="hint-username">{{ t('register.username_hint') }}</p>
+        {% if errors.username %}<p class="field-error" id="error-username">{{ errors.username }}</p>{% endif %}
+      </div>
+
+      <div class="form-field" id="field-email">
+        <label for="email">{{ t('register.email') }}</label>
+        <input class="input{% if errors.email %} input-invalid{% endif %}" type="email" id="email"
+               name="email" required autocomplete="email" value="{{ form.email }}"
+               placeholder="{{ t('register.email_placeholder') }}"
+               aria-describedby="hint-email{% if errors.email %} error-email{% endif %}">
+        <p class="hint" id="hint-email">{{ t('register.email_hint') }}</p>
+        {% if errors.email %}<p class="field-error" id="error-email">{{ errors.email }}</p>{% endif %}
+      </div>
+
+      <div class="form-field" id="field-phone_number">
+        <label for="phone_number">{{ t('register.phone_number') }} {{ t('common.optional') }}</label>
+        <input class="input{% if errors.phone_number %} input-invalid{% endif %}" type="tel" id="phone_number"
+               name="phone_number" value="{{ form.phone_number }}" placeholder="+250738123456"
+               autocomplete="tel"
+               aria-describedby="hint-phone_number{% if errors.phone_number %} error-phone_number{% endif %}">
+        <p class="hint" id="hint-phone_number">{{ t('register.phone_hint') }}</p>
+        {% if errors.phone_number %}<p class="field-error" id="error-phone_number">{{ errors.phone_number }}</p>{% endif %}
+      </div>
+
+      <fieldset class="form-field" id="field-role">
+        <legend>{{ t('register.role_legend') }}</legend>
+        <div class="role-choice">
+          <label class="role-card">
+            <input type="radio" name="role" value="buyer" {% if form.role != 'seller' %}checked{% endif %}>
+            <span class="role-card-body">
+              <span class="role-card-title">{{ icon('cart', 18) }} {{ t('role.buyer') }}</span>
+              <span class="role-card-text">{{ t('register.buyer_text') }}</span>
+            </span>
+          </label>
+          <label class="role-card">
+            <input type="radio" name="role" value="seller" {% if form.role == 'seller' %}checked{% endif %}>
+            <span class="role-card-body">
+              <span class="role-card-title">{{ icon('store', 18) }} {{ t('role.seller') }}</span>
+              <span class="role-card-text">{{ t('register.seller_text') }}</span>
+            </span>
+          </label>
+        </div>
+        <p class="hint">{{ t('register.role_hint') }}</p>
+        {% if errors.role %}<p class="field-error" id="error-role">{{ errors.role }}</p>{% endif %}
+      </fieldset>
+
+      <div class="form-field" id="field-password">
+        <div class="label-row">
+          <label for="password">{{ t('register.password') }}</label>
+          <button type="button" class="link-btn" data-generate-password>{{ t('register.generate') }}</button>
+        </div>
+        <div class="input-group">
+          <input class="input{% if errors.password %} input-invalid{% endif %}" type="password" id="password"
+                 name="password" required autocomplete="new-password"
+                 placeholder="{{ t('register.password_placeholder') }}"
+                 aria-describedby="password-rules{% if errors.password %} error-password{% endif %}">
+          <button type="button" class="input-action" data-toggle-password="password"
+                  aria-label="{{ t('a11y.show_password') }}" title="{{ t('a11y.show_password') }}"
+                  data-label-show="{{ t('a11y.show_password') }}" data-label-hide="{{ t('a11y.hide_password') }}">{{ icon('eye', 18) }}</button>
+        </div>
+        <ul class="rule-list" id="password-rules" aria-live="polite">
+          {% for rule in password_rules %}
+            <li class="rule" data-rule="{{ rule.id }}">
+              <span class="rule-mark" aria-hidden="true">{{ icon('x', 14) }}</span>
+              <span class="rule-text">{{ rule.label }}{% if not rule.required %} {{ t('common.optional') }}{% endif %}</span>
+            </li>
+          {% endfor %}
+        </ul>
+        {% if errors.password %}<p class="field-error" id="error-password">{{ errors.password }}</p>{% endif %}
+      </div>
+
+      <div class="form-field" id="field-confirm_password">
+        <label for="confirm_password">{{ t('register.confirm_password') }}</label>
+        <div class="input-group">
+          <input class="input{% if errors.password and not errors.current_password %} input-invalid{% endif %}"
+                 type="password" id="confirm_password" name="confirm_password" required
+                 autocomplete="new-password" placeholder="{{ t('register.confirm_placeholder') }}"
+                 aria-describedby="match-status">
+          <button type="button" class="input-action" data-toggle-password="confirm_password"
+                  aria-label="{{ t('a11y.show_password') }}" title="{{ t('a11y.show_password') }}"
+                  data-label-show="{{ t('a11y.show_password') }}" data-label-hide="{{ t('a11y.hide_password') }}">{{ icon('eye', 18) }}</button>
+        </div>
+        <p class="hint" id="match-status" data-match-status
+           data-text-empty="{{ t('register.no_match') }}"
+           data-text-match="{{ t('common.passwords_match') }}"
+           data-text-mismatch="{{ t('common.passwords_mismatch') }}">{{ t('register.no_match') }}</p>
+      </div>
+
+      <div class="form-field" id="field-terms">
+        <label class="checkbox">
+          <input type="checkbox" name="terms" value="1" required>
+          <span>{{ t('register.terms') }}</span>
+        </label>
+        {% if errors.terms %}<p class="field-error" id="error-terms">{{ errors.terms }}</p>{% endif %}
+      </div>
+
+      <button class="btn btn-primary btn-block btn-lg" type="submit">
+        {{ t('register.submit') }} {{ icon('arrow-right', 18) }}
+      </button>
+    </form>
+
+    <p class="auth-switch">
+      {{ t('register.already') }} <a href="{{ url_for('auth.login') }}">{{ t('register.sign_in_instead') }}</a>
+    </p>
+  </section>
+
+  <aside class="auth-aside">
+    <h2>{{ t('register.aside_title') }}</h2>
+    <ul class="check-list">
+      <li>{{ icon('check', 16) }} {{ t('register.aside_one') }}</li>
+      <li>{{ icon('check', 16) }} {{ t('register.aside_two') }}</li>
+      <li>{{ icon('check', 16) }} {{ t('register.aside_three') }}</li>
+      <li>{{ icon('check', 16) }} {{ t('register.aside_four') }}</li>
+    </ul>
+    <h2>{{ t('register.aside_note_title') }}</h2>
+    <p class="muted small">{{ t('register.aside_note') }}</p>
+  </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+HTTP/1.1 302 FOUND
+Server: Werkzeug/3.0.4 Python/3.12.10
+Date: Thu, 22 Oct 2026 22:02:11 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 237
+Location: /auth/login?next=/seller/
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: geolocation=(), microphone=(), camera=()
+Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'none'
+Vary: Cookie
+Set-Cookie: nexacart_csrf=.eJwVjtEKgkAQRX9lmucKggjsTSqiUIkQLCJkXceUtp1wdgOR_r3t6TxczuWMWGrpm9LxkyyucVHF5zxJDBdFe9nnh7bfRttlNavT5si0qgdSkZSf9JQ9cIplY5S0JLi-jQguAMVrTSJhLMhofhE4hmx3iTfheAJX9j0ordlbB51AT6oeYAZvQ0oIpHtY6Ozf0WxdZz3N8f69T9GwVoZCYcj8_gDApTzl.atqH4w.6rV7wKHT21y-ZXZIrLLQT9GcvQg; HttpOnly; Path=/; SameSite=Lax
+Connection: close
+

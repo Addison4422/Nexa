@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ product['name'] }} - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="breadcrumb"><a href="{{ url_for('product.catalogue') }}">{{ t('catalogue.title') }}</a>
+      <span aria-hidden="true">/</span> {{ product['name'] }}</p>
+    <h1>{{ product['name'] }}</h1>
+  </div>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <header class="card-head"><h2>{{ t('product.details') }}</h2></header>
+    <div class="product-media">
+      {% set image_url = url_for('product.product_image', filename=product['image_path']) if product['image_path'] else '' %}
+      {% if image_url %}
+        <img src="{{ image_url }}" alt="{{ product['name'] }}">
+      {% else %}
+        <div class="product-placeholder">{{ icon('store', 48) }}</div>
+      {% endif %}
+    </div>
+    {% if product['stock_quantity'] <= 0 %}
+      <p class="alert alert-warning" style="padding: var(--space-3) var(--space-4);">
+        {{ icon('alert', 16) }} <strong>{{ t('product.out_of_stock') }}</strong>
+      </p>
+    {% else %}
+      <p class="muted small">{{ t('product.stock_available', n=product['stock_quantity']) }}</p>
+    {% endif %}
+    {% if current_user and current_user['role'] == 'buyer' and product['stock_quantity'] > 0 %}
+      <form class="stacked-form add-to-cart-form" action="{{ url_for('cart.add') }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="product_id" value="{{ product['id'] }}">
+        <div class="form-field">
+          <label for="quantity">{{ t('product.quantity') }}</label>
+          <input class="input" id="quantity" name="quantity" type="number" min="1"
+                 max="{{ product['stock_quantity'] }}" value="1">
+        </div>
+        <button class="btn btn-primary" type="submit">{{ icon('cart', 18) }} {{ t('product.add_to_cart') }}</button>
+      </form>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <header class="card-head"><h2>{{ t('product.information') }}</h2></header>
+    <dl class="detail-list">
+      <div><dt>{{ t('product.price') }}</dt><dd>{{ (product['price_cents'] or 0)|money }}</dd></div>
+      <div><dt>{{ t('product.stock') }}</dt>
+        <dd><span class="status-pill {% if product['stock_quantity'] <= 0 %}status-suspended{% else %}status-active{% endif %}">
+          {{ product['stock_quantity'] }}
+        </span></dd></div>
+      <div><dt>{{ t('product.sku') }}</dt><dd>#{{ product['id'] }}</dd></div>
+      <div><dt>{{ t('product.category') }}</dt><dd>{{ product['category'] or '—' }}</dd></div>
+      <div><dt>{{ t('product.rating_label') }}</dt>
+        <dd>
+          {% if rating.average %}
+            ★ {{ rating.average }} / 5 ({{ rating.count }})
+          {% else %}
+            {{ t('product.no_reviews') }}
+          {% endif %}
+        </dd>
+      </div>
+      <div><dt>{{ t('product.created') }}</dt><dd>{{ product['created_at']|datetime }}</dd></div>
+    </dl>
+    <hr class="rule">
+    <p>{{ product['description'] or t('product.no_description') }}</p>
+  </section>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <header class="card-head"><h2>{{ t('product.reviews_title') }}</h2></header>
+    {% if can_review %}
+      <form method="post" class="stacked-form" action="{{ url_for('product.review_product', product_id=product['id']) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-field">
+          <label for="rating">{{ t('product.your_rating') }}</label>
+          <select class="input" id="rating" name="rating" required>
+            <option value="5">★★★★★ (5)</option>
+            <option value="4">★★★★ (4)</option>
+            <option value="3">★★★ (3)</option>
+            <option value="2">★★ (2)</option>
+            <option value="1">★ (1)</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="comment">{{ t('product.your_comment') }}</label>
+          <textarea class="input" id="comment" name="comment" rows="3" maxlength="500"></textarea>
+        </div>
+        <button class="btn btn-primary" type="submit">{{ icon('check', 16) }} {{ t('product.submit_review') }}</button>
+      </form>
+      <hr class="rule">
+    {% endif %}
+    {% if reviews %}
+      {% for review in reviews %}
+        <div class="review-item">
+          <p><strong>{{ '★' * review['rating'] }}{{ '☆' * (5 - review['rating']) }}</strong>
+             <span class="muted small">@{{ review['username'] }} · {{ review['created_at']|datetime }}</span></p>
+          {% if review['comment'] %}<p class="small">{{ review['comment'] }}</p>{% endif %}
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="muted">{{ t('product.no_reviews') }}</p>
+    {% endif %}
+  </section>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <header class="card-head"><h2>{{ t('buyer.cart_card') }}</h2></header>
+    <p class="muted">{{ t('buyer.cart_text') }}</p>
+    <a class="btn btn-outline" href="{{ url_for('cart.view') }}">
+      {{ t('cart.open_cart') }} {{ icon('arrow-right', 16) }}
+    </a>
+  </section>
+</div>
+{% endblock %}

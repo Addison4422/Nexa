@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('catalogue.page_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('catalogue.eyebrow') }}</p>
+    <h1>{{ t('catalogue.title') }}</h1>
+    <p class="muted">{{ t('catalogue.subtitle') }}</p>
+  </div>
+  <div class="page-head-actions">
+    {% if current_user and current_user['role'] == 'buyer' %}
+      <a class="btn btn-primary" href="{{ url_for('cart.view') }}">
+        {{ icon('cart', 18) }} {{ t('cart.open_cart') }}
+      </a>
+    {% elif current_user and current_user['role'] in ('seller', 'admin') %}
+      <a class="btn btn-primary" href="{{ url_for('product.register_product') }}">
+        {{ icon('plus', 18) }} {{ t('product.register_product') }}
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+{% if not products %}
+  <div class="card empty-card">
+    <span class="empty-icon">{{ icon('store', 48) }}</span>
+    <h2>{{ t('catalogue.empty_title') }}</h2>
+    <p>{{ t('catalogue.empty_text') }}</p>
+    {% if current_user and current_user['role'] in ('seller', 'admin') %}
+      <p class="muted small">{{ t('catalogue.empty_seller_hint') }}</p>
+    {% endif %}
+  </div>
+{% else %}
+  <p class="small muted">{{ t('catalogue.showing', n=total) }}
+    {{ t('catalogue.products_available') }}</p>
+  <form method="get" class="catalogue-filter" role="search">
+    <input class="input" type="search" name="q" value="{{ search }}"
+           placeholder="{{ t('catalogue.search_placeholder') }}"
+           aria-label="{{ t('catalogue.search_placeholder') }}">
+    <select class="input" name="category" aria-label="{{ t('catalogue.filter_category') }}">
+      <option value="">{{ t('catalogue.all_categories') }}</option>
+      {% for cat in categories %}
+        <option value="{{ cat }}" {{ 'selected' if cat == category }}>{{ cat }}</option>
+      {% endfor %}
+    </select>
+    <select class="input" name="sort" aria-label="{{ t('catalogue.sort_by') }}">
+      <option value="newest" {{ 'selected' if sort == 'newest' }}>{{ t('catalogue.sort_newest') }}</option>
+      <option value="price_asc" {{ 'selected' if sort == 'price_asc' }}>{{ t('catalogue.sort_price_asc') }}</option>
+      <option value="price_desc" {{ 'selected' if sort == 'price_desc' }}>{{ t('catalogue.sort_price_desc') }}</option>
+      <option value="name" {{ 'selected' if sort == 'name' }}>{{ t('catalogue.sort_name') }}</option>
+    </select>
+    <button class="btn btn-primary" type="submit">{{ icon('search', 16) }} {{ t('catalogue.apply') }}</button>
+  </form>
+  <div class="product-grid" aria-label="{{ t('catalogue.title') }}">
+    {% for product in products %}
+      {% set image_url = url_for('product.product_image', filename=product['image_path']) if product['image_path'] else '' %}
+      <article class="product-card" tabindex="0">
+        {% if current_user and current_user['role'] == 'buyer' %}
+        <button class="fav-btn{% if product['id'] in fav_ids %} is-fav{% endif %}" type="button"
+                data-fav-url="{{ url_for('product.toggle_favorite', product_id=product['id']) }}"
+                data-label-add="{{ t('fav.add') }}" data-label-remove="{{ t('fav.remove') }}"
+                aria-label="{{ t('fav.add') }}" title="{{ t('fav.add') }}">
+          {{ icon('heart', 17) }}
+        </button>
+        {% endif %}
+        <div class="product-media">
+          {% if image_url %}
+            <img src="{{ image_url }}" alt="{{ product['name'] }}" loading="lazy">
+          {% else %}
+            <div class="product-placeholder">{{ icon('store', 32) }}</div>
+          {% endif %}
+          <div class="product-badges">
+            {% if product['stock_quantity'] <= 0 %}
+              <span class="product-badge out-of-stock">{{ t('product.out_of_stock') }}</span>
+            {% else %}
+              <span class="product-badge stock">{{ t('product.in_stock', n=product['stock_quantity']) }}</span>
+            {% endif %}
+            {% if product['discount_percent'] and product['discount_percent'] > 0 %}
+              <span class="product-badge product-badge-discount">-{{ product['discount_percent'] }}%</span>
+            {% endif %}
+            {% if product['seller_promo_code'] %}
+              <span class="product-badge product-badge-coupon">{{ icon('tag', 12) }} {{ product['seller_promo_code'] }}</span>
+            {% endif %}
+          </div>
+          {# --- hover quick view: description, seller and savings --- #}
+          <div class="product-quickview" aria-hidden="true">
+            <p class="quickview-desc">{{ (product['description'] or t('product.no_description'))|truncate(140) }}</p>
+            <p class="quickview-seller">
+              {{ icon('store', 14) }}
+              {% if product['seller_business'] %}{{ product['seller_business'] }}{% else %}@{{ product['seller_username'] }}{% endif %}
+              {% if product['seller_country'] %} · {{ product['seller_country'] }}{% endif %}
+            </p>
+          </div>
+        </div>
+        <div class="product-body">
+          <h3 class="product-name">{{ product['name'] }}</h3>
+          <p class="product-seller small">{{ icon('store', 13) }} {{ product['seller_business'] or product['seller_username'] }}</p>
+          {% if product['seller_promo_code'] %}
+            <p class="product-promo-note">{{ icon('tag', 13) }} {{ t('product.promo_note', code=product['seller_promo_code'], percent=product['seller_promo_percent']) }}</p>
+          {% endif %}
+          {% if product['discount_percent'] and product['discount_percent'] > 0 %}
+            <p class="product-price-row">
+              <span class="product-price product-price-sale">{{ product|after_discount|money }}</span>
+              <span class="product-price-was">{{ product['price_cents']|money }}</span>
+            </p>
+          {% else %}
+            <p class="product-price-row">
+              <span class="product-price">{{ product['price_cents']|money }}</span>
+            </p>
+          {% endif %}
+          <div class="product-footer">
+            {% if current_user and current_user['role'] == 'buyer' and product['stock_quantity'] > 0 %}
+              <form class="add-to-cart-form" action="{{ url_for('cart.add') }}" method="post"
+                    data-text-adding="{{ t('cart.flash.adding') }}…"
+                    data-text-added="{{ t('cart.flash.added_short') }}"
+                    data-text-error="{{ t('cart.err.add_failed') }}">
+                <input type="hidden" name="product_id" value="{{ product['id'] }}">
+                <input type="hidden" name="quantity" value="1">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-primary btn-sm add-to-cart-btn" type="submit">
+                  {{ t('product.add_to_cart') }}
+                </button>
+              </form>
+            {% elif current_user and current_user['role'] == 'buyer' %}
+              <button class="btn btn-outline btn-sm is-disabled" type="button">
+                {{ t('product.out_of_stock') }}
+              </button>
+            {% else %}
+              <a class="btn btn-outline btn-sm" href="{{ url_for('product.edit_product', product_id=product['id']) }}">
+                {{ t('product.edit') }}
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </article>
+    {% endfor %}
+  </div>
+
+  {% if pages > 1 %}
+    <nav class="pagination" aria-label="{{ t('catalogue.title') }}">
+      {% if page > 1 %}
+        <a class="btn btn-outline btn-sm"
+           href="{{ url_for('product.catalogue', q=search, category=category, sort=sort, page=page-1) }}">{{ t('common.previous') }}</a>
+      {% endif %}
+      <span class="muted small">{{ t('common.page', page=page, pages=pages) }}</span>
+      {% if page < pages %}
+        <a class="btn btn-outline btn-sm"
+           href="{{ url_for('product.catalogue', q=search, category=category, sort=sort, page=page+1) }}">{{ t('common.next') }}</a>
+      {% endif %}
+    </nav>
+  {% endif %}
+{% endif %}
+{% endblock %}

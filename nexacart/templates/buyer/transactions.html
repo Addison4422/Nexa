@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('transactions.title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('buyer.workspace') }}</p>
+    <h1>{{ t('transactions.title') }}</h1>
+    <p class="muted">{{ t('transactions.subtitle') }}</p>
+  </div>
+</div>
+
+<section class="stat-grid" aria-label="{{ t('transactions.summary') }}">
+  <article class="stat-card">
+    <span class="stat-icon icon-blue">{{ icon('list', 20) }}</span>
+    <div>
+      <p class="stat-value">{{ stats.orders }}</p>
+      <p class="stat-label">{{ t('transactions.stat_orders') }}</p>
+    </div>
+  </article>
+  <article class="stat-card">
+    <span class="stat-icon icon-green">{{ icon('check', 20) }}</span>
+    <div>
+      <p class="stat-value">{{ stats.orders - stats.pending }}</p>
+      <p class="stat-label">{{ t('transactions.stat_paid') }}</p>
+    </div>
+  </article>
+  <article class="stat-card">
+    <span class="stat-icon icon-amber">{{ icon('clock', 20) }}</span>
+    <div>
+      <p class="stat-value">{{ stats.pending }}</p>
+      <p class="stat-label">{{ t('transactions.stat_pending') }}</p>
+    </div>
+  </article>
+  <article class="stat-card">
+    <span class="stat-icon icon-purple">{{ icon('currency', 20) }}</span>
+    <div>
+      <p class="stat-value">{{ stats.spent_cents|money }}</p>
+      <p class="stat-label">{{ t('transactions.stat_total') }}</p>
+    </div>
+  </article>
+</section>
+
+{% if orders %}
+<div class="table-wrap">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th scope="col">{{ t('transactions.col_reference') }}</th>
+        <th scope="col">{{ t('transactions.col_date') }}</th>
+        <th scope="col">{{ t('transactions.col_items') }}</th>
+        <th scope="col" style="text-align:end">{{ t('transactions.col_amount') }}</th>
+        <th scope="col">{{ t('transactions.col_status') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      <tr>
+        <td><code>{{ order['reference'] }}</code></td>
+        <td>{{ order['created_at']|datetime }}</td>
+        <td>{{ order['total_quantity'] }}</td>
+        <td style="text-align:end">{{ order['amount_cents']|money }}</td>
+        <td>
+          {% if order['status'] == 'paid' %}
+          <span class="status-pill status-active">{{ t('transactions.status_paid') }}</span>
+          {% elif order['status'] == 'pending' %}
+          <span class="status-pill status-warning">{{ t('transactions.status_pending') }}</span>
+          {% else %}
+          <span class="status-pill status-suspended">{{ t('transactions.status_' ~ order['status']) }}</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if pages > 1 %}
+<nav class="pagination" aria-label="{{ t('transactions.title') }}">
+  {% if page > 1 %}
+  <a class="btn btn-outline btn-sm" href="{{ url_for('buyer.transactions', page=page-1) }}">{{ t('common.previous')
+    }}</a>
+  {% endif %}
+  <span class="muted small">{{ t('common.page', page=page, pages=pages) }}</span>
+  {% if page < pages %} <a class="btn btn-outline btn-sm" href="{{ url_for('buyer.transactions', page=page+1) }}">{{
+    t('common.next') }}</a>
+    {% endif %}
+</nav>
+{% endif %}
+{% else %}
+<div class="card empty-card">
+  <span class="empty-icon">{{ icon('list', 48) }}</span>
+  <h2>{{ t('transactions.empty_title') }}</h2>
+  <p>{{ t('transactions.empty_text') }}</p>
+  <a class="btn btn-primary" href="{{ url_for('product.catalogue') }}">
+    {{ t('cart.continue_shopping') }} {{ icon('arrow-right', 16) }}
+  </a>
+</div>
+{% endif %}
+{% endblock %}

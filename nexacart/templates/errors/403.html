@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('errors.forbidden_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<section class="card error-card">
+  <span class="error-code">403</span>
+  <span class="empty-icon" aria-hidden="true">{{ icon('ban', 30) }}</span>
+  <h1>{{ t('errors.forbidden_heading') }}</h1>
+  <p class="muted">
+    {% if required_roles %}
+      {{ t('errors.forbidden_roles', roles=required_roles|map('role_label')|join(' & ')) }}
+    {% else %}
+      {{ t('errors.forbidden_general') }}
+    {% endif %}
+    {% if user_role %}
+      {{ t('errors.forbidden_signed_in', role=role_labels[user_role]) }}
+    {% endif %}
+  </p>
+  <p class="muted small">{{ t('errors.forbidden_note') }}</p>
+  <div class="error-actions">
+    <a class="btn btn-primary" href="{{ url_for('main.index') }}">{{ icon('home', 16) }} {{ t('errors.back_home') }}</a>
+    {% if current_user %}
+      <a class="btn btn-outline" href="{{ url_for('account.profile') }}">{{ t('errors.my_account') }}</a>
+    {% else %}
+      <a class="btn btn-outline" href="{{ url_for('auth.login') }}">{{ t('nav.sign_in') }}</a>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

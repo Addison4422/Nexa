@@ -1,0 +1,35 @@
+<nav class="pagination" aria-label="{{ t('common.page', page=pagination.page, pages=pagination.pages) }}">
+  {% set target_endpoint = endpoint|default('admin.users', true) %}
+  <p class="pagination-info">
+    {% if pagination.total %}
+      {{ t('common.showing', start=pagination.start|number, end=pagination.end|number, total=pagination.total|number) }}
+    {% else %}
+      {{ t('common.no_results') }}
+    {% endif %}
+  </p>
+  {% if pagination.pages > 1 %}
+    <div class="pagination-controls">
+      {% if pagination.has_prev %}
+        <a class="btn btn-ghost btn-sm"
+           href="{{ url_for(target_endpoint, page=pagination.page - 1, q=search|default('', true), role=role|default('', true)) }}">
+          {{ icon('arrow-left', 16) }} {{ t('common.previous') }}
+        </a>
+      {% else %}
+        <span class="btn btn-ghost btn-sm is-disabled" aria-disabled="true">
+          {{ icon('arrow-left', 16) }} {{ t('common.previous') }}
+        </span>
+      {% endif %}
+      <span class="pagination-page">{{ t('common.page', page=pagination.page, pages=pagination.pages) }}</span>
+      {% if pagination.has_next %}
+        <a class="btn btn-ghost btn-sm"
+           href="{{ url_for(target_endpoint, page=pagination.page + 1, q=search|default('', true), role=role|default('', true)) }}">
+          {{ t('common.next') }} {{ icon('arrow-right', 16) }}
+        </a>
+      {% else %}
+        <span class="btn btn-ghost btn-sm is-disabled" aria-disabled="true">
+          {{ t('common.next') }} {{ icon('arrow-right', 16) }}
+        </span>
+      {% endif %}
+    </div>
+  {% endif %}
+</nav>

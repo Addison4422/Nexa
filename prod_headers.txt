@@ -1,0 +1,15 @@
+HTTP/1.1 400 BAD REQUEST
+Server: Werkzeug/3.0.4 Python/3.12.10
+Date: Thu, 22 Oct 2026 22:02:32 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 9878
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: geolocation=(), microphone=(), camera=()
+Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; form-action 'self'; base-uri 'self'; frame-ancestors 'none'
+Cache-Control: no-store
+Vary: Cookie
+Set-Cookie: nexacart_csrf=eyJfY3NyZl90b2tlbiI6ImpoclN4WE1XVWJLbDFOb3paX3pEVFdKVkFvTVRnQUhnMDBESWFZdFhHNWciLCJsb2NhbGUiOiJlbiJ9.atqH-A.Qi642R3POHeLI3ZZ1Rh3P41NWIE; HttpOnly; Path=/; SameSite=Lax
+Connection: close
+

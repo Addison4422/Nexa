@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('admin.dashboard_page_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ t('admin.dashboard_title') }}</h1>
+    <p class="muted">{{ t('admin.dashboard_subtitle') }}</p>
+  </div>
+  <div class="page-head-actions">
+    <a class="btn btn-outline btn-sm" href="{{ url_for('admin.users') }}">{{ icon('users', 16) }} {{ t('admin.manage_users') }}</a>
+    <a class="btn btn-outline btn-sm" href="{{ url_for('admin.audit') }}">{{ icon('shield', 16) }} {{ t('admin.activity_log') }}</a>
+    <a class="btn btn-outline btn-sm" href="{{ url_for('weather.admin_history') }}">{{ icon('sun', 16) }} {{ t('admin.manage_weather') }}</a>
+  </div>
+</div>
+
+<section class="stat-grid" aria-label="{{ t('admin.dashboard_title') }}">
+  <article class="stat-card">
+    <span class="stat-icon icon-blue">{{ icon('users', 20) }}</span>
+    <div>
+      <p class="stat-value">{{ stats.total|number }}</p>
+      <p class="stat-label">{{ t('admin.stat_users') }}</p>
+    </div>
+    <p class="stat-foot">{{ t('admin.stat_users_foot', n=stats.new_7d|number) }}</p>
+  </article>
+
+  <article class="stat-card">
+    <span class="stat-icon icon-green">{{ icon('gauge', 20) }}</span>
+    <div>
+      <p class="stat-value">{{ sessions_count|number }}</p>
+      <p class="stat-label">{{ t('admin.stat_sessions') }}</p>
+    </div>
+    <p class="stat-foot">{{ t('admin.stat_sessions_foot', n=stats.active|number) }}</p>
+  </article>
+
+  <article class="stat-card">
+    <span class="stat-icon icon-amber">{{ icon('alert', 20) }}</span>
+    <div>
+      <p class="stat-value">{{ failures|number }}</p>
+      <p class="stat-label">{{ t('admin.stat_failures') }}</p>
+    </div>
+    <p class="stat-foot">{{ t('admin.stat_failures_foot', n=successes|number) }}</p>
+  </article>
+
+  <article class="stat-card">
+    <span class="stat-icon icon-purple">{{ icon('lock', 20) }}</span>
+    <div>
+      <p class="stat-value">{{ stats.locked|number }}</p>
+      <p class="stat-label">{{ t('admin.stat_locked') }}</p>
+    </div>
+    <p class="stat-foot">{{ t('admin.stat_locked_foot', n=stats.suspended|number) }}</p>
+  </article>
+</section>
+
+<section class="card" style="margin-bottom: var(--space-5);">
+  <header class="card-head">
+    <span class="feature-icon icon-purple" aria-hidden="true">{{ icon('currency', 22) }}</span>
+    <h2>{{ t('admin.transactions_title') }}</h2>
+  </header>
+  <div class="stat-grid" style="margin-bottom: var(--space-4);">
+    <article class="stat-card">
+      <span class="stat-icon icon-blue">{{ icon('list', 20) }}</span>
+      <div>
+        <p class="stat-value">{{ txn_stats.orders }}</p>
+        <p class="stat-label">{{ t('admin.stat_paid_orders') }}</p>
+      </div>
+    </article>
+    <article class="stat-card">
+      <span class="stat-icon icon-purple">{{ icon('currency', 20) }}</span>
+      <div>
+        <p class="stat-value">{{ txn_stats.volume_cents|money }}</p>
+        <p class="stat-label">{{ t('admin.stat_volume') }}</p>
+      </div>
+    </article>
+    <article class="stat-card">
+      <span class="stat-icon icon-green">{{ icon('check', 20) }}</span>
+      <div>
+        <p class="stat-value">{{ txn_stats.commission_cents|money }}</p>
+        <p class="stat-label">{{ t('admin.stat_commission', fee=fee_percent) }}</p>
+      </div>
+    </article>
+  </div>
+  {% if recent_transactions %}
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr>
+          <th scope="col">{{ t('transactions.col_reference') }}</th>
+          <th scope="col">{{ t('transactions.col_buyer') }}</th>
+          <th scope="col">{{ t('checkout.payment_method') }}</th>
+          <th scope="col">{{ t('transactions.col_date') }}</th>
+          <th scope="col" style="text-align:end">{{ t('transactions.col_amount') }}</th>
+          <th scope="col" style="text-align:end">{{ t('admin.col_commission') }}</th>
+          <th scope="col">{{ t('transactions.col_status') }}</th>
+        </tr></thead>
+        <tbody>
+          {% for txn in recent_transactions %}
+          <tr>
+            <td><code>{{ txn['reference'] }}</code></td>
+            <td>@{{ txn['buyer_username'] }}</td>
+            <td>{{ t('payment.method_' ~ txn['payment_method']) }}</td>
+            <td>{{ (txn['paid_at'] or txn['created_at'])|datetime }}</td>
+            <td style="text-align:end">{{ txn['amount_cents']|money }}</td>
+            <td style="text-align:end">{{ (txn['amount_cents'] * fee_percent // 100)|money }}</td>
+            <td><span class="status-pill status-active">{{ t('transactions.status_paid') }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="muted">{{ t('admin.no_transactions') }}</p>
+  {% endif %}
+</section>
+
+<div class="grid-2">
+  <section class="card">
+    <header class="card-head">
+      <span class="feature-icon" aria-hidden="true">{{ icon('chart', 22) }}</span>
+      <h2>{{ t('admin.by_role') }}</h2>
+    </header>
+    <div class="bar-list">
+      {% for bar in role_bars %}
+        <div class="bar-row">
+          <span class="bar-label">{{ t('role.' ~ bar.role) }}</span>
+          <span class="bar-track">
+            <span class="bar-fill bar-{{ bar.role }}" style="width: {{ bar.percent }}%"></span>
+          </span>
+          <span class="bar-value">{{ bar.count|number }}</span>
+        </div>
+      {% endfor %}
+    </div>
+    <p class="muted small">{{ t('admin.by_role_note') }}</p>
+  </section>
+
+  <section class="card">
+    <header class="card-head">
+      <span class="feature-icon" aria-hidden="true">{{ icon('user', 22) }}</span>
+      <h2>{{ t('admin.newest') }}</h2>
+    </header>
+    <ul class="mini-list">
+      {% for row in recent_users %}
+        <li>
+          <span class="avatar avatar-sm" aria-hidden="true">{{ row['full_name'][0]|upper }}</span>
+          <span class="mini-main">
+            <span class="mini-title">{{ row['full_name'] }}</span>
+            <span class="muted small">@{{ row['username'] }} &middot; {{ row['created_at']|ago }}</span>
+          </span>
+          <span class="role-badge {{ row['role']|role_css }}">{{ role_labels[row['role']] }}</span>
+        </li>
+      {% else %}
+        <li class="muted">{{ t('admin.no_accounts') }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+
+<section class="card">
+  <header class="card-head">
+    <span class="feature-icon" aria-hidden="true">{{ icon('shield', 22) }}</span>
+    <h2>{{ t('admin.latest_events') }}</h2>
+    <a class="link-btn" href="{{ url_for('admin.audit') }}">{{ t('admin.view_all') }}</a>
+  </header>
+
+  {% if recent_activity %}
+    <div class="table-wrap">
+      <table class="data-table">
+        <caption class="visually-hidden">{{ t('admin.latest_events') }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ t('admin.col_event') }}</th>
+            <th scope="col">{{ t('admin.col_user') }}</th>
+            <th scope="col">{{ t('admin.col_detail') }}</th>
+            <th scope="col">{{ t('admin.col_when') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in recent_activity %}
+            <tr>
+              <td><span class="event-tag event-{{ entry['action'] }}">{{ audit_label(entry['action']) }}</span></td>
+              <td>{{ entry['username'] or '-' }}</td>
+              <td class="muted">{{ entry['detail'] or '-' }}</td>
+              <td class="muted small">{{ entry['created_at']|ago }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="muted">{{ t('admin.no_events') }}</p>
+  {% endif %}
+</section>
+{% endblock %}

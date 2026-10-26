@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('errors.method_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<section class="card error-card">
+  <span class="error-code">405</span>
+  <span class="empty-icon" aria-hidden="true">{{ icon('refresh', 30) }}</span>
+  <h1>{{ t('errors.method_heading') }}</h1>
+  <p class="muted">{{ t('errors.method_text') }}</p>
+  <div class="error-actions">
+    <a class="btn btn-primary" href="{{ url_for('main.index') }}">{{ icon('home', 16) }} {{ t('errors.back_home') }}</a>
+  </div>
+</section>
+{% endblock %}

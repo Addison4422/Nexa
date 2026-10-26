@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('admin.users_page_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ t('admin.users_title') }}</h1>
+    <p class="muted">{{ t('admin.users_subtitle') }}</p>
+  </div>
+  <div class="page-head-actions">
+    <a class="btn btn-outline btn-sm" href="{{ url_for('admin.dashboard') }}">{{ icon('gauge', 16) }} {{ t('nav.dashboard') }}</a>
+  </div>
+</div>
+
+<section class="card">
+  <form class="filter-bar" method="get" action="{{ url_for('admin.users') }}" role="search">
+    <div class="search-field">
+      <span class="search-icon" aria-hidden="true">{{ icon('search', 18) }}</span>
+      <label class="visually-hidden" for="q">{{ t('admin.search_users') }}</label>
+      <input class="input" type="search" id="q" name="q" value="{{ search }}"
+             placeholder="{{ t('admin.search_placeholder') }}">
+    </div>
+    <div class="filter-field">
+      <label class="visually-hidden" for="role">{{ t('admin.filter_role') }}</label>
+      <select class="input" id="role" name="role">
+        <option value="">{{ t('admin.all_roles') }}</option>
+        <option value="admin" {% if role == 'admin' %}selected{% endif %}>{{ t('admin.administrators') }}</option>
+        <option value="seller" {% if role == 'seller' %}selected{% endif %}>{{ t('admin.sellers') }}</option>
+        <option value="buyer" {% if role == 'buyer' %}selected{% endif %}>{{ t('admin.buyers') }}</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" type="submit">{{ t('admin.apply') }}</button>
+    {% if search or role %}
+      <a class="btn btn-ghost" href="{{ url_for('admin.users') }}">{{ t('admin.clear') }}</a>
+    {% endif %}
+  </form>
+
+  {% if users %}
+    <div class="table-wrap">
+      <table class="data-table">
+        <caption class="visually-hidden">{{ t('admin.users_caption') }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ t('admin.col_user') }}</th>
+            <th scope="col">{{ t('admin.col_role') }}</th>
+            <th scope="col">{{ t('admin.col_status') }}</th>
+            <th scope="col">{{ t('admin.col_registered') }}</th>
+            <th scope="col">{{ t('admin.col_last_sign_in') }}</th>
+            <th scope="col"><span class="visually-hidden">{{ t('admin.col_actions') }}</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in users %}
+            <tr>
+              <th scope="row" class="cell-user">
+                <span class="avatar avatar-sm" aria-hidden="true">{{ row['full_name'][0]|upper }}</span>
+                <span class="mini-main">
+                  <span class="mini-title">{{ row['full_name'] }}</span>
+                  <span class="muted small">@{{ row['username'] }} &middot; {{ row['email'] }}</span>
+                </span>
+              </th>
+              <td><span class="role-badge {{ row['role']|role_css }}">{{ role_labels[row['role']] }}</span></td>
+              <td>
+                <span class="status-pill status-{{ row['status'] }}">{{ t('status.' ~ row['status']) }}</span>
+                {% if row['locked_until'] and row['locked_until'] > 0 %}
+                  <span class="status-pill status-locked">{{ t('status.locked') }}</span>
+                {% endif %}
+              </td>
+              <td class="muted small">{{ row['created_at']|datetime }}</td>
+              <td class="muted small">{{ row['last_login_at']|datetime }}</td>
+              <td class="cell-actions">
+                <a class="btn btn-ghost btn-sm" href="{{ url_for('admin.user_detail', user_id=row['id']) }}">
+                  {{ t('admin.manage') }}
+                </a>
+                <form class="inline-form" method="post"
+                      action="{{ url_for('admin.resend_pin', user_id=row['id']) }}"
+                      data-confirm="{{ t('admin.resend_pin_confirm') }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-outline btn-sm" type="submit">
+                    {{ icon('key', 16) }} {{ t('admin.resend_pin') }}
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% include "partials/_pagination.html" %}
+  {% else %}
+    <div class="empty-state">
+      <span class="empty-icon" aria-hidden="true">{{ icon('search', 28) }}</span>
+      <p>{{ t('admin.no_match') }}</p>
+      <a class="btn btn-outline btn-sm" href="{{ url_for('admin.users') }}">{{ t('admin.show_all') }}</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

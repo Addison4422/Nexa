@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="{{ locale }}" dir="{{ locale_direction }}" data-theme="light" data-user="{{ current_user['username'] if current_user else 'guest' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{{ t('app.description') }}">
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <script src="{{ url_for('static', filename='js/theme-init.js') }}"></script>
+</head>
+<body class="{% set ep = request.endpoint or '' %}{% if ep == 'main.index' %}page-home{% elif ep == 'weather.search' %}page-weather{% elif ep.startswith('auth.') %}page-auth{% elif ep in ['admin.dashboard', 'seller.dashboard', 'buyer.dashboard', 'buyer.transactions', 'seller.orders', 'seller.earnings', 'seller.transactions'] %}page-dashboard{% endif %}{% block body_class %}{% endblock %}">
+{% from "partials/_icons.html" import icon %}
+<a class="skip-link" href="#main-content">{{ t('a11y.skip_to_content') }}</a>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="{{ url_for('main.index') }}" aria-label="{{ t('a11y.home', name=app_name) }}">
+      <span class="brand-mark" aria-hidden="true">{{ icon('cart', 22) }}</span>
+      <span class="brand-text">
+        <span class="brand-name">{{ app_name }}</span>
+        <span class="brand-tagline">{{ t('app.tagline') }}</span>
+      </span>
+    </a>
+
+    {% if nav_items %}
+      <nav class="primary-nav" aria-label="{{ t('a11y.primary_nav') }}">
+        {% for item in nav_items %}
+          <a class="nav-link{% if request.endpoint == item.endpoint %} is-active{% endif %}"
+             href="{{ url_for(item.endpoint) }}"
+             {% if request.endpoint == item.endpoint %}aria-current="page"{% endif %}>{{ t(item.label) }}</a>
+        {% endfor %}
+      </nav>
+    {% endif %}
+
+    <div class="header-actions">
+      <div class="lang-switcher" role="group" aria-label="{{ t('a11y.language') }}">
+        {% for option in locales %}
+          <a class="lang-option{% if option.code == locale %} is-active{% endif %}"
+             href="{{ url_for('main.set_language', locale=option.code, next=request.full_path.rstrip('?')) }}"
+             hreflang="{{ option.code }}"
+             lang="{{ option.code }}"
+             dir="{{ option.dir }}"
+             title="{{ option.english_name }}"
+             {% if option.code == locale %}aria-current="true"{% endif %}>{{ option.code|upper }}</a>
+        {% endfor %}
+      </div>
+
+      <button type="button" class="icon-btn" id="theme-toggle" aria-label="{{ t('a11y.switch_theme') }}"
+              title="{{ t('a11y.switch_theme') }}"
+              data-label-light="{{ t('a11y.switch_to_light') }}"
+              data-label-dark="{{ t('a11y.switch_to_dark') }}">
+        <span class="icon-light">{{ icon('sun', 18) }}</span>
+        <span class="icon-dark">{{ icon('moon', 18) }}</span>
+      </button>
+
+      {% if current_user %}
+        {% if current_user['role'] == 'buyer' %}
+          <a class="btn btn-outline btn-sm cart-link" href="{{ url_for('cart.view') }}"
+             aria-label="{{ t('a11y.cart', count=cart_count) }}">
+            {{ icon('cart', 18) }}
+            <span class="cart-badge">{{ cart_count }}</span>
+            <span class="visually-hidden">{{ t('nav.cart') }} ({{ cart_count }})</span>
+          </a>
+        {% endif %}
+        {% if current_user['role'] == 'admin' and pending_requests %}
+          <a class="icon-btn has-badge" href="{{ url_for('admin.pending_requests') }}"
+             aria-label="{{ t('admin.requests_title') }}: {{ pending_requests }}"
+             title="{{ t('admin.requests_title') }}">
+            {{ icon('clock', 18) }}
+            <span class="badge-red">{{ pending_requests }}</span>
+          </a>
+        {% endif %}
+        <div class="menu-wrap">
+          <button type="button" class="icon-btn has-badge" id="menu-toggle"
+                  aria-haspopup="true" aria-expanded="false" aria-controls="header-menu"
+                  aria-label="{{ t('a11y.menu') }}" title="{{ t('a11y.menu') }}">
+            {{ icon('dots', 18) }}
+            {% if unack_count %}<span class="badge-red">{{ unack_count }}</span>{% endif %}
+          </button>
+          <div class="menu-pop" id="header-menu" hidden>
+            {% for item in menu_items %}
+              <a class="menu-item" href="{{ url_for(item.endpoint) }}">
+                {{ icon(item.icon, 16) }} {{ t(item.label) }}
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="user-chip">
+          <span class="avatar" aria-hidden="true">{{ current_user['full_name'][0]|upper }}</span>
+          <span class="user-meta">
+            <span class="user-name">{{ current_user['full_name'] }}</span>
+            <span class="role-badge {{ current_user['role']|role_css }}">
+              {{ role_labels[current_user['role']] }}
+            </span>
+          </span>
+        </div>
+        <form method="post" action="{{ url_for('auth.logout') }}" class="inline-form" data-confirm="{{ t('nav.confirm_sign_out') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-ghost btn-sm" type="submit">{{ icon('logout', 16) }} {{ t('nav.sign_out') }}</button>
+        </form>
+      {% else %}
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('auth.login') }}">{{ t('nav.sign_in') }}</a>
+        <a class="btn btn-primary btn-sm" href="{{ url_for('auth.register') }}">{{ t('nav.create_account') }}</a>
+      {% endif %}
+    </div>
+  </div>
+</header>
+
+<div class="container flash-container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% include "partials/_flashes.html" %}
+  {% endwith %}
+</div>
+
+{% if notifications %}
+<div class="container notif-container" role="region" aria-label="{{ t('notify.region') }}">
+  {% for notification in notifications %}
+    <div class="notif-card notif-{{ notification['kind'].split(':')[0] }}">
+      <span class="notif-icon" aria-hidden="true">{% if notification['kind'] == 'complaint_resolved' %}{{ icon('check', 20) }}{% elif notification['kind'].startswith('role_offer') %}{{ icon('users', 20) }}{% else %}{{ icon('info', 20) }}{% endif %}</span>
+      <p class="notif-text">{{ notification['message'] }}</p>
+      {% if notification['kind'].startswith('role_offer:') %}
+        <form method="post" action="{{ url_for('notify.accept_role_offer', notification_id=notification['id']) }}" class="inline-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-primary btn-sm" type="submit">{{ t('notify.accept') }}</button>
+        </form>
+        <form method="post" action="{{ url_for('notify.decline_role_offer', notification_id=notification['id']) }}" class="inline-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-ghost btn-sm" type="submit">{{ t('notify.decline') }}</button>
+        </form>
+      {% else %}
+        <form method="post" action="{{ url_for('notify.acknowledge', notification_id=notification['id']) }}"
+              class="inline-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}">
+          <button class="btn btn-outline btn-sm" type="submit">{{ t('notify.acknowledge') }}</button>
+        </form>
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<main id="main-content" class="container main-content" tabindex="-1">
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <p class="footer-brand">{{ app_name }} &middot; {{ t('app.tagline') }}</p>
+    <p class="footer-meta">
+      {{ t('app.footer') }} &middot; {{ t('app.version', v=app_version) }}
+    </p>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+<!-- Confirmation modal for destructive actions (sign out, delete, role change). -->
+<div class="modal" id="confirm-modal" aria-hidden="true" aria-modal="true"
+     role="dialog" aria-labelledby="confirm-modal-title">
+  <div class="modal-overlay" data-confirm-modal-close></div>
+  <div class="modal-card">
+    <header class="modal-head">
+      <h2 id="confirm-modal-title">{{ t('common.confirm_action') }}</h2>
+      <button class="modal-close" data-confirm-modal-close>{{ icon('x', 20) }}</button>
+    </header>
+    <div class="modal-body">
+      <p id="confirm-modal-message"></p>
+    </div>
+    <footer class="modal-foot">
+      <button class="btn btn-ghost" data-confirm-modal-close>{{ t('common.cancel') }}</button>
+      <form id="confirm-modal-form" method="post" class="inline-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-danger" type="submit">{{ t('common.confirm') }}</button>
+      </form>
+    </footer>
+  </div>
+</div>
+</body>
+</html>

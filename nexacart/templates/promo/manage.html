@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('promo.seller_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('promo.eyebrow') }}</p>
+    <h1>{{ t('promo.seller_title') }}</h1>
+    <p class="muted">{{ t('promo.seller_subtitle') }}</p>
+  </div>
+  <div class="page-head-actions">
+    <a class="btn btn-outline btn-sm" href="{{ url_for('product.seller_products') }}">{{ icon('store', 16) }} {{
+      t('product.list_title') }}</a>
+  </div>
+</div>
+
+<div class="grid-2 promo-grid">
+  <section class="card promo-card promo-card-create">
+    <header class="card-head">
+      <span class="feature-icon promo-icon" aria-hidden="true">{{ icon('tag', 22) }}</span>
+      <h2>{{ t('promo.create_title') }}</h2>
+    </header>
+    <p class="muted small">{{ t('promo.seller_hint') }}</p>
+    <form method="post" action="{{ url_for('promo.create') }}" class="stacked-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-field">
+        <label for="code">{{ t('promo.code_label') }}</label>
+        <input class="input promo-code-input" id="code" name="code" inputmode="numeric" pattern="\d{4}" maxlength="4"
+          placeholder="1234" required autocomplete="off">
+        <p class="hint">{{ t('promo.code_hint') }}</p>
+      </div>
+      <div class="grid-2 promo-fields">
+        <div class="form-field">
+          <label for="percent">{{ t('promo.percent_label') }}</label>
+          <input class="input" id="percent" name="percent" type="number" min="1" max="{{ promo_max }}" value="10"
+            required>
+        </div>
+        <div class="form-field">
+          <label for="duration">{{ t('promo.duration_label') }}</label>
+          <div class="promo-duration">
+            <input class="input" id="duration" name="duration" type="number" min="1" value="3" required>
+            <select class="input" name="unit" aria-label="{{ t('promo.unit_label') }}">
+              <option value="days" selected>{{ t('promo.unit_days') }}</option>
+              <option value="hours">{{ t('promo.unit_hours') }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary" type="submit">{{ icon('tag', 16) }} {{ t('promo.create_button') }}</button>
+    </form>
+    <div class="alert alert-info" style="margin-top: var(--space-4);">
+      {{ icon('info', 16) }}
+      <p class="alert-text">{{ t('promo.seller_scope_hint') }}</p>
+    </div>
+  </section>
+
+  <section class="card promo-card">
+    <header class="card-head">
+      <span class="feature-icon promo-icon" aria-hidden="true">{{ icon('list', 22) }}</span>
+      <h2>{{ t('promo.mine_title') }} <span class="badge-count">{{ promos|length }}</span></h2>
+    </header>
+    {% if promos %}
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">{{ t('promo.col_code') }}</th>
+            <th scope="col">{{ t('promo.col_discount') }}</th>
+            <th scope="col">{{ t('promo.col_expires') }}</th>
+            <th scope="col">{{ t('promo.col_status') }}</th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for promo in promos %}
+          {% set live = (promo['used'] == 0 and promo['expires_at']|promo_live) %}
+          <tr>
+            <td><span class="promo-chip">{{ promo['code'] }}</span></td>
+            <td>-{{ promo['percent'] }}%</td>
+            <td>{{ promo['expires_at']|datetime }}</td>
+            <td>
+              {% if promo['used'] %}
+              <span class="status-pill status-suspended">{{ t('promo.status_used') }}</span>
+              {% elif live %}
+              <span class="status-pill status-active">{{ t('promo.status_live') }}</span>
+              {% else %}
+              <span class="status-pill status-warning">{{ t('promo.status_expired') }}</span>
+              {% endif %}
+            </td>
+            <td class="cell-actions">
+              {% if promo['used'] == 0 %}
+              <details class="promo-update">
+                <summary class="btn btn-ghost btn-sm">{{ icon('settings', 14) }} {{ t('promo.update_button') }}</summary>
+                <form method="post" action="{{ url_for('promo.update', promo_id=promo['id']) }}"
+                  class="stacked-form promo-update-form">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <div class="promo-fields grid-2">
+                    <div class="form-field">
+                      <label>{{ t('promo.percent_label') }}</label>
+                      <input class="input" name="percent" type="number" min="1" max="{{ promo_max }}"
+                        value="{{ promo['percent'] }}" required>
+                    </div>
+                    <div class="form-field">
+                      <label>{{ t('promo.duration_label') }}</label>
+                      <div class="promo-duration">
+                        <input class="input" name="duration" type="number" min="1" value="3" required>
+                        <select class="input" name="unit" aria-label="{{ t('promo.unit_label') }}">
+                          <option value="days" selected>{{ t('promo.unit_days') }}</option>
+                          <option value="hours">{{ t('promo.unit_hours') }}</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <button class="btn btn-primary btn-sm" type="submit">{{ t('promo.update_button') }}</button>
+                </form>
+              </details>
+              <form method="post" action="{{ url_for('promo.delete', promo_id=promo['id']) }}" class="inline-form"
+                data-confirm="{{ t('promo.confirm_delete') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-danger btn-sm" type="submit">{{ icon('trash', 14) }}</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <span class="empty-icon">{{ icon('tag', 28) }}</span>
+      <p class="muted">{{ t('promo.mine_empty_seller') }}</p>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

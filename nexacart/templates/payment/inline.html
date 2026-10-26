@@ -1,0 +1,59 @@
+ {% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('payment.page_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('checkout.eyebrow') }}</p>
+    <h1>{{ t('payment.inline_title') }}</h1>
+    <p class="muted">{{ t('payment.inline_subtitle') }}</p>
+  </div>
+</div>
+
+<section class="card payment-card">
+  <div class="payment-summary">
+    <div class="payment-row"><span>{{ t('checkout.order_ref') }}</span><code>{{ reference }}</code></div>
+    <div class="payment-row"><span>{{ t('checkout.amount') }}</span><strong>{{ order['amount_cents']|money }}</strong></div>
+    <div class="payment-row"><span>{{ t('checkout.customer_email') }}</span><span>{{ customer_email }}</span></div>
+  </div>
+  <button id="pay-now" class="btn btn-primary btn-lg btn-block" type="button">
+    {{ icon('credit-card', 18) }} {{ t('payment.inline_button') }}
+  </button>
+  <p class="hint" style="text-align:center;">{{ t('payment.inline_hint') }}</p>
+  <a class="btn btn-ghost btn-sm" href="{{ url_for('checkout.index') }}">{{ t('cart.back_to_cart') }}</a>
+</section>
+
+<script src="https://checkout.flutterwave.com/v3.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("pay-now").addEventListener("click", function () {
+      FlutterwaveCheckout({
+        public_key: "{{ public_key }}",
+        tx_ref: "{{ reference }}",
+        amount: {{ amount }},
+        currency: "{{ currency }}",
+        payment_options: "{{ payment_options }}",
+        customer: {
+          email: "{{ customer_email }}",
+          name: "{{ customer_name }}"
+        },
+        customizations: {
+          title: "{{ app_name }}",
+          description: "{{ t('payment.inline_desc') }}"
+        },
+        callback: function (data) {
+          var base = "{{ redirect_url }}".split("?")[0];
+          var params = new URLSearchParams({
+            reference: "{{ reference }}",
+            transaction_id: data.transaction_id || "",
+            status: data.status || "successful"
+          });
+          window.location.href = base + "?" + params.toString();
+        },
+        onclose: function () { /* buyer closed the modal: stay here */ }
+      });
+    });
+  });
+</script>
+{% endblock %}

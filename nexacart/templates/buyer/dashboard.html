@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('buyer.dashboard_page_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('buyer.workspace') }}</p>
+    <h1>{{ t('buyer.welcome', name=user['full_name'].split(' ')[0]) }}</h1>
+    <p class="muted">{{ t('buyer.subtitle') }}</p>
+  </div>
+  <div class="page-head-actions">
+    <span class="role-badge {{ user['role']|role_css }}">{{ role_labels[user['role']] }}</span>
+  </div>
+</div>
+
+<section class="stat-grid" aria-label="{{ t('buyer.workspace') }}">
+  <article class="stat-card">
+    <span class="stat-icon icon-blue">{{ icon('user', 20) }}</span>
+    <div>
+      <p class="stat-value">{{ user['full_name'].split(' ')[0] }}</p>
+      <p class="stat-label">{{ t('buyer.stat_holder') }}</p>
+    </div>
+    <p class="stat-foot">@{{ user['username'] }}</p>
+  </article>
+  <article class="stat-card">
+    <span class="stat-icon icon-green">{{ icon('lock', 20) }}</span>
+    <div>
+      <p class="stat-value">{{ t('status.' ~ user['status']) }}</p>
+      <p class="stat-label">{{ t('buyer.stat_standing') }}</p>
+    </div>
+    <p class="stat-foot">{{ t('seller.member_since', date=user['created_at']|datetime) }}</p>
+  </article>
+  <article class="stat-card">
+    <span class="stat-icon icon-amber">{{ icon('clock', 20) }}</span>
+    <div>
+      <p class="stat-value">{{ user['last_login_at']|ago }}</p>
+      <p class="stat-label">{{ t('buyer.stat_last_sign_in') }}</p>
+    </div>
+    <p class="stat-foot">{{ t('buyer.stat_logged') }}</p>
+  </article>
+  <article class="stat-card">
+    <span class="stat-icon icon-purple">{{ icon('cart', 20) }}</span>
+    <div>
+      <p class="stat-value">{{ cart_count }}</p>
+      <p class="stat-label">{{ t('buyer.stat_cart') }}</p>
+    </div>
+    <p class="stat-foot">{{ cart_value_cents|money }}</p>
+  </article>
+  <article class="stat-card">
+    <span class="stat-icon icon-blue">{{ icon('list', 20) }}</span>
+    <div>
+      <p class="stat-value">{{ order_stats.orders }}</p>
+      <p class="stat-label">{{ t('transactions.stat_orders') }}</p>
+    </div>
+    <p class="stat-foot">{{ order_stats.spent_cents|money }}</p>
+  </article>
+</section>
+
+<div class="grid-2">
+  <section class="card">
+    <header class="card-head">
+      <span class="feature-icon" aria-hidden="true">{{ icon('cart', 22) }}</span>
+      <h2>{{ t('buyer.cart_card') }}</h2>
+    </header>
+    <p class="muted">{{ t('buyer.cart_text') }}</p>
+    <div class="btn-row">
+      <a class="btn btn-primary btn-sm" href="{{ url_for('product.catalogue') }}">
+        {{ t('nav.shop') }} {{ icon('arrow-right', 16) }}
+      </a>
+      <a class="btn btn-outline btn-sm" href="{{ url_for('buyer.cart') }}">
+        {{ t('buyer.open_cart') }}
+      </a>
+    </div>
+  </section>
+
+  <section class="card">
+    <header class="card-head">
+      <span class="feature-icon" aria-hidden="true">{{ icon('list', 22) }}</span>
+      <h2>{{ t('transactions.title') }}</h2>
+    </header>
+    <p class="muted">{{ t('transactions.subtitle') }}</p>
+    <a class="btn btn-outline btn-sm" href="{{ url_for('buyer.transactions') }}">
+      {{ t('transactions.view_all') }} {{ icon('arrow-right', 16) }}
+    </a>
+  </section>
+</div>
+
+<section class="card">
+  <header class="card-head">
+    <span class="feature-icon" aria-hidden="true">{{ icon('info', 22) }}</span>
+    <h2>{{ t('about.title') }}</h2>
+  </header>
+  <p class="muted">{{ t('about.buyer_lead') }}</p>
+  <a class="btn btn-outline btn-sm" href="{{ url_for('main.about_role', role='buyer') }}">
+    {{ t('about.read_more') }} {{ icon('arrow-right', 16) }}
+  </a>
+</section>
+{% endblock %}

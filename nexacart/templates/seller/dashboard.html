@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('seller.dashboard_page_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('seller.workspace') }}</p>
+    <h1>{{ t('seller.welcome', name=user['full_name'].split(' ')[0]) }}</h1>
+    <p class="muted">{{ t('seller.subtitle') }}</p>
+  </div>
+  <div class="page-head-actions">
+    <span class="role-badge {{ user['role']|role_css }}">{{ role_labels[user['role']] }}</span>
+  </div>
+</div>
+
+<section class="stat-grid" aria-label="{{ t('seller.workspace') }}">
+  <article class="stat-card">
+    <span class="stat-icon icon-blue">{{ icon('store', 20) }}</span>
+    <div>
+      <p class="stat-value">{{ product_count }}</p>
+      <p class="stat-label">{{ t('seller.stat_products') }}</p>
+    </div>
+    <p class="stat-foot">{{ t('seller.stat_products_foot') }}</p>
+  </article>
+  <article class="stat-card">
+    <span class="stat-icon icon-green">{{ icon('chart', 20) }}</span>
+    <div>
+      <p class="stat-value">{{ stock_units }}</p>
+      <p class="stat-label">{{ t('seller.stat_stock') }}</p>
+    </div>
+    <p class="stat-foot">{{ t('seller.stat_stock_foot') }}</p>
+  </article>
+  <article class="stat-card">
+    <span class="stat-icon icon-purple">{{ icon('currency', 20) }}</span>
+    <div>
+      <p class="stat-value">{{ sales.revenue_cents|money }}</p>
+      <p class="stat-label">{{ t('seller.stat_revenue') }}</p>
+    </div>
+    <p class="stat-foot">{{ t('seller.stat_revenue_foot', orders=sales.orders, units=sales.units_sold) }}</p>
+  </article>
+  <article class="stat-card">
+    <span class="stat-icon icon-amber">{{ icon('lock', 20) }}</span>
+    <div>
+      <p class="stat-value">{{ t('status.' ~ user['status']) }}</p>
+      <p class="stat-label">{{ t('seller.stat_standing') }}</p>
+    </div>
+    <p class="stat-foot">{{ t('seller.member_since', date=user['created_at']|datetime) }}</p>
+  </article>
+</section>
+
+<div class="grid-2">
+  {% if low_stock %}
+    <section class="card" style="grid-column: 1 / -1">
+      <header class="card-head">
+        <span class="feature-icon icon-amber" aria-hidden="true">{{ icon('alert', 22) }}</span>
+        <h2>{{ t('seller.low_stock_title') }}</h2>
+      </header>
+      <p class="muted small">{{ t('seller.low_stock_text', n=low_stock_threshold) }}</p>
+      <ul class="check-list">
+        {% for product in low_stock %}
+          <li>
+            {{ icon('alert', 16) }}
+            <span><strong>{{ product['name'] }}</strong> —
+              {% if product['stock_quantity'] <= 0 %}
+                {{ t('seller.out_of_stock_label') }}
+              {% else %}
+                {{ t('seller.low_stock_label', n=product['stock_quantity']) }}
+              {% endif %}
+            </span>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+  <section class="card">
+    <header class="card-head">
+      <span class="feature-icon" aria-hidden="true">{{ icon('shield', 22) }}</span>
+      <h2>{{ t('about.title') }}</h2>
+    </header>
+    <p class="muted">{{ t('about.seller_lead') }}</p>
+    <a class="btn btn-outline btn-sm" href="{{ url_for('main.about_role', role='seller') }}">
+      {{ t('about.read_more') }} {{ icon('arrow-right', 16) }}
+    </a>
+  </section>
+
+    <header class="card-head">
+      <span class="feature-icon" aria-hidden="true">{{ icon('chart', 22) }}</span>
+      <h2>{{ t('seller.top_products_title') }}</h2>
+    </header>
+    {% if top_products %}
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr>
+          <th>{{ t('product.name') }}</th>
+          <th style="text-align:end">{{ t('seller.col_units_sold') }}</th>
+          <th style="text-align:end">{{ t('seller.col_revenue') }}</th>
+        </tr></thead>
+        <tbody>
+          {% for p in top_products %}
+          <tr>
+            <td>{{ p['name'] }}</td>
+            <td style="text-align:end">{{ p['units_sold'] }}</td>
+            <td style="text-align:end">{{ p['revenue_cents']|money }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="muted">{{ t('seller.no_sales_yet') }}</p>
+    {% endif %}
+  </section>
+
+  <section class="card" style="grid-column: 1 / -1">
+    <header class="card-head">
+      <span class="feature-icon" aria-hidden="true">{{ icon('store', 22) }}</span>
+      <h2>{{ t('product.list_title') }}</h2>
+    </header>
+    {% if products %}
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>{{ t('product.name') }}</th>
+            <th>{{ t('product.price') }}</th>
+            <th>{{ t('product.stock') }}</th>
+            <th>{{ t('product.status_label') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products[:5] %}
+          <tr>
+            <td><strong>{{ product['name'] }}</strong></td>
+            <td>{{ product['price_cents']|money }}</td>
+            <td>{{ product['stock_quantity'] }}</td>
+            <td>
+              {% if product['is_active'] %}
+                <span class="badge badge-green">{{ t('status.active') }}</span>
+              {% else %}
+                <span class="badge badge-muted">{{ t('status.inactive') }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if products|length > 5 %}
+      <p class="muted small">{{ t('seller.more_products', n=products|length - 5) }}</p>
+    {% endif %}
+    {% else %}
+    <p class="muted">{{ t('product.no_products') }}</p>
+    <p class="muted small">{{ t('product.no_products_text') }}</p>
+    {% endif %}
+    <div class="btn-row">
+      <a class="btn btn-outline btn-sm" href="{{ url_for('product.seller_products') }}">
+        {{ t('seller.open_catalogue') }} {{ icon('arrow-right', 16) }}
+      </a>
+      <a class="btn btn-primary btn-sm" href="{{ url_for('product.register_product') }}">
+        {{ t('product.register_title') }} {{ icon('arrow-right', 16) }}
+      </a>
+    </div>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('weather.page_title', name=app_name) }}{% endblock %}
+{% block body_class %} scene-{{ (result.get('icon_group') if result and result.get('status') == 'ok' else 'cloud') }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('weather.eyebrow') }}</p>
+    <h1>{{ t('weather.title') }}</h1>
+    <p class="muted">{{ t('weather.subtitle') }}</p>
+  </div>
+</div>
+
+{% if not api_configured %}
+<div class="alert alert-info">
+  <span class="alert-icon">{{ icon('info', 20) }}</span>
+  <p class="alert-text">{{ t('weather.demo_notice') }}</p>
+</div>
+{% endif %}
+
+<div class="weather-layout">
+  <section class="card weather-panel">
+    <div class="weather-tabs" role="tablist">
+      <a class="weather-tab{% if mode == 'city' %} is-active{% endif %}"
+         href="{{ url_for('weather.search', mode='city') }}" role="tab"
+         aria-selected="{{ 'true' if mode == 'city' else 'false' }}">
+        {{ icon('search', 18) }} {{ t('weather.by_city') }}
+      </a>
+      <a class="weather-tab{% if mode == 'coords' %} is-active{% endif %}"
+         href="{{ url_for('weather.search', mode='coords') }}" role="tab"
+         aria-selected="{{ 'true' if mode == 'coords' else 'false' }}">
+        {{ icon('droplet', 18) }} {{ t('weather.by_coords') }}
+      </a>
+    </div>
+
+    {% if mode == 'city' %}
+    <form method="get" action="{{ url_for('weather.search') }}" class="weather-form">
+      <input type="hidden" name="mode" value="city">
+      <input type="hidden" name="run" value="1">
+      <div class="form-field">
+        <label for="city">{{ t('weather.city_label') }}</label>
+        <input class="input{% if errors.city %} input-invalid{% endif %}" id="city" name="city"
+          placeholder="{{ t('weather.city_placeholder') }}" value="{{ request.args.get('city', '') }}"
+          autocomplete="off" maxlength="100" required>
+        {% if errors.city %}<p class="field-error">{{ errors.city }}</p>{% endif %}
+        <p class="hint">{{ t('weather.city_hint') }}</p>
+      </div>
+      <button class="btn btn-primary" type="submit">{{ icon('search', 18) }} {{ t('weather.search_button') }}</button>
+    </form>
+    {% else %}
+    <form method="get" action="{{ url_for('weather.search') }}" class="weather-form">
+      <input type="hidden" name="mode" value="coords">
+      <input type="hidden" name="run" value="1">
+      <div class="weather-coords">
+        <div class="form-field">
+          <label for="lat">{{ t('weather.lat_label') }}</label>
+          <input class="input{% if errors.coords %} input-invalid{% endif %}" id="lat" name="lat" inputmode="decimal"
+            placeholder="-1.95" value="{{ request.args.get('lat', '') }}">
+        </div>
+        <div class="form-field">
+          <label for="lon">{{ t('weather.lon_label') }}</label>
+          <input class="input{% if errors.coords %} input-invalid{% endif %}" id="lon" name="lon" inputmode="decimal"
+            placeholder="30.06" value="{{ request.args.get('lon', '') }}">
+        </div>
+      </div>
+      {% if errors.coords %}<p class="field-error">{{ errors.coords }}</p>{% endif %}
+      <p class="hint">{{ t('weather.coords_hint') }}</p>
+      <button class="btn btn-primary" type="submit">{{ icon('search', 18) }} {{ t('weather.search_button') }}</button>
+    </form>
+    {% endif %}
+  </section>
+
+  <section class="weather-result-col" aria-live="polite">
+    {% if ran and not result and not errors %}
+    <div class="card weather-state">
+      <span class="empty-icon">{{ icon('clock', 28) }}</span>
+      <h2>{{ t('weather.loading') }}</h2>
+      <p class="muted">{{ t('weather.loading_hint') }}</p>
+    </div>
+    {% elif result and result.get('status') == 'ok' %}
+    <article class="card weather-card">
+      <header class="weather-head">
+        <div>
+          <h2 class="weather-city">{{ result['city'] }}{% if result['country'] %}, {{ result['country'] }}{% endif %}
+          </h2>
+          <p class="muted small">{{ t('weather.observed') }} {{ result['observed_at']|epoch }}</p>
+        </div>
+        {% if result.get('demo') %}<span class="chip">{{ t('weather.demo_chip') }}</span>{% endif %}
+      </header>
+      <div class="weather-main">
+        <span class="weather-icon weather-{{ result['icon_group'] }}" aria-hidden="true">
+          {% if result['icon_group'] == 'rain' %}{{ icon('rain', 44) }}
+          {% elif result['icon_group'] == 'cloud' %}{{ icon('cloud', 44) }}
+          {% elif result['icon_group'] == 'storm' %}{{ icon('rain', 44) }}
+          {% elif result['icon_group'] == 'snow' %}{{ icon('cloud', 44) }}
+          {% elif result['icon_group'] == 'mist' %}{{ icon('cloud', 44) }}
+          {% else %}{{ icon('sun', 44) }}{% endif %}
+        </span>
+        <div>
+          <span class="weather-temp">{{ result['temp']|number }}°C</span>
+          <p class="weather-desc">{{ result['description'] }}</p>
+        </div>
+      </div>
+      <dl class="weather-facts">
+        <div>
+          <dt>{{ t('weather.feels_like') }}</dt>
+          <dd>{{ result['feels_like']|number }}°C</dd>
+        </div>
+        <div>
+          <dt>{{ t('weather.humidity') }}</dt>
+          <dd>{{ result['humidity']|number }}%</dd>
+        </div>
+        <div>
+          <dt>{{ t('weather.wind') }}</dt>
+          <dd>{{ result['wind_speed']|number }} m/s</dd>
+        </div>
+        <div>
+          <dt>{{ t('weather.coords') }}</dt>
+          <dd>{{ result['lat']|number }}, {{ result['lon']|number }}</dd>
+        </div>
+      </dl>
+    </article>
+    {% elif errors %}
+    <div class="card weather-state weather-error" role="alert">
+      <span class="empty-icon weather-error-icon">{{ icon('alert', 28) }}</span>
+      <h2>{{ t('weather.error_title') }}</h2>
+      <p class="muted">{{ errors.get('city') or errors.get('coords') }}</p>
+      <p class="hint">{{ t('weather.error_hint') }}</p>
+    </div>
+    {% else %}
+    <div class="card weather-state">
+      <span class="empty-icon">{{ icon('sun', 28) }}</span>
+      <h2>{{ t('weather.empty_title') }}</h2>
+      <p class="muted">{{ t('weather.empty_hint') }}</p>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

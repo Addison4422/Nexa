@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('checkout.success_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="card receipt">
+  <header class="receipt-head">
+    <span class="receipt-badge" aria-hidden="true">{{ icon('check', 30) }}</span>
+    <h1>{{ t('checkout.payment_complete') }}</h1>
+    <p class="muted">{{ t('checkout.success_subtitle') }}</p>
+    <span class="receipt-ref">{{ order['reference'] }}</span>
+  </header>
+
+  {% if lines %}
+    <ul class="receipt-lines">
+      {% for line in lines %}
+      <li>
+        <span>
+          {{ line['name'] }}
+          <span class="qty">{{ t('checkout.qty', n=line['quantity']) }}</span>
+        </span>
+        <span class="amount">{{ line['subtotal_cents']|money }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="muted" style="text-align:center;">{{ t('checkout.no_items') }}</p>
+  {% endif %}
+
+  <div class="receipt-total">
+    <span>{{ t('checkout.amount') }}</span>
+    <span>{{ order['amount_cents']|money }} {{ order['currency'] }}</span>
+  </div>
+
+  <div class="receipt-meta">
+    <span><strong>{{ t('checkout.status') }}:</strong>
+      <span class="status-pill status-active">{{ t('checkout.paid') }}</span>
+    </span>
+    <span><strong>{{ t('checkout.paid_at') }}:</strong> {{ order['paid_at'] or '-' }}</span>
+  </div>
+
+  <div class="receipt-actions">
+    <a class="btn btn-outline" href="{{ url_for('product.catalogue') }}">
+      {{ icon('arrow-left', 16) }} {{ t('cart.continue_shopping') }}
+    </a>
+  </div>
+</div>
+{% endblock %}

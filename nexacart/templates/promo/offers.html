@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('promo.offers_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('promo.eyebrow') }}</p>
+    <h1>{{ t('promo.offers_title') }}</h1>
+    <p class="muted">{{ t('promo.offers_subtitle') }}</p>
+  </div>
+  <div class="page-head-actions">
+    <a class="btn btn-primary btn-sm" href="{{ url_for('product.catalogue') }}">{{ icon('shop', 16) }} {{ t('nav.shop') }}</a>
+  </div>
+</div>
+
+<section>
+  <h2 class="section-title">{{ t('promo.discounted_title') }}</h2>
+  {% if discounted %}
+  <div class="product-grid">
+    {% for product in discounted %}
+    <article class="product-card" tabindex="0">
+      <div class="product-media">
+        {% if product['image_path'] %}
+        <img src="{{ url_for('product.product_image', filename=product['image_path']) }}" alt="{{ product['name'] }}"
+          loading="lazy">
+        {% else %}
+        <div class="product-placeholder">{{ icon('store', 32) }}</div>
+        {% endif %}
+        <span class="product-badge product-badge-discount">-{{ product['discount_percent'] }}%</span>
+        <div class="product-quickview" aria-hidden="true">
+          <p class="quickview-desc">{{ (product['description'] or t('product.no_description'))|truncate(140) }}</p>
+          <p class="quickview-seller">{{ icon('store', 14) }} {{ product['seller_business'] or
+            product['seller_username'] }}</p>
+        </div>
+      </div>
+      <div class="product-body">
+        <h3 class="product-name">{{ product['name'] }}</h3>
+        <p class="product-seller small">{{ icon('store', 13) }} {{ product['seller_business'] or
+          product['seller_username'] }}</p>
+        <p class="product-price-row">
+          <span class="product-price product-price-sale">{{ product|after_discount|money }}</span>
+          <span class="product-price-was">{{ product['price_cents']|money }}</span>
+        </p>
+        <div class="product-footer">
+          <a class="btn btn-outline btn-sm" href="{{ url_for('product.product_detail', product_id=product['id']) }}">
+            {{ t('product.view') }}
+          </a>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card empty-card">
+    <span class="empty-icon">{{ icon('tag', 48) }}</span>
+    <h2>{{ t('promo.offers_empty_title') }}</h2>
+    <p>{{ t('promo.offers_empty_text') }}</p>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,12 @@
+url        http://127.0.0.1:5000/
+http       200
+load       1129ms
+title      "NEXACART - secure commerce platform"
+bodyChars  1593
+patchright C:\Users\user\.vscode\extensions\danielsanmedium.dscodegpt-3.24.78\standalone/
+text       Skip to main content NEXACART MARKETPLACE EN FR AR Sign in Create account NEXACART MARKETPLACE One platform, three clearly separated workspaces. NEXACART is a role aware e-commerce platform. Secure ac
+eval       "EVAL ERROR: Error: page.evaluate: SyntaxError: Unexpected token ')'"
+
+console errors/warnings (0):
+
+requests failed (0):

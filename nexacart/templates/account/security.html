@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('account.security_page_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ t('account.security_title') }}</h1>
+    <p class="muted">{{ t('account.security_subtitle') }}</p>
+  </div>
+  <div class="page-head-actions">
+    <a class="btn btn-outline btn-sm" href="{{ url_for('account.profile') }}">{{ icon('arrow-left', 16) }} {{ t('errors.my_account') }}</a>
+  </div>
+</div>
+
+{% if user['must_change_password'] %}
+  <div class="alert alert-warning" role="alert">
+    <span class="alert-icon" aria-hidden="true">{{ icon('alert', 18) }}</span>
+    <p class="alert-text">
+      <strong>{{ t('account.forced_title') }}</strong> {{ t('account.forced_text') }}
+    </p>
+  </div>
+{% endif %}
+
+<div class="grid-2">
+  <section class="card">
+    <header class="card-head">
+      <span class="feature-icon" aria-hidden="true">{{ icon('key', 22) }}</span>
+      <h2>{{ t('account.change_password_card') }}</h2>
+    </header>
+
+    {% if errors %}
+      <div class="alert alert-error" role="alert">
+        <span class="alert-icon" aria-hidden="true">{{ icon('alert', 18) }}</span>
+        <div class="alert-text">
+          <ul class="alert-list">
+            {% for field, message in errors.items() %}
+              <li>{{ message }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('account.security_settings') }}" novalidate
+          data-password-min="{{ password_min }}" data-password-max="{{ password_max }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="form-field">
+        <label for="current_password">{{ t('account.current_password') }}</label>
+        <div class="input-group">
+          <input class="input{% if errors.current_password %} input-invalid{% endif %}" type="password"
+                 id="current_password" name="current_password" required autocomplete="current-password">
+          <button type="button" class="input-action" data-toggle-password="current_password"
+                  aria-label="{{ t('a11y.show_password') }}" title="{{ t('a11y.show_password') }}"
+                  data-label-show="{{ t('a11y.show_password') }}" data-label-hide="{{ t('a11y.hide_password') }}">{{ icon('eye', 18) }}</button>
+        </div>
+        {% if errors.current_password %}<p class="field-error">{{ errors.current_password }}</p>{% endif %}
+      </div>
+
+      <div class="form-field">
+        <div class="label-row">
+          <label for="new_password">{{ t('account.new_password') }}</label>
+          <button type="button" class="link-btn" data-generate-password>{{ t('register.generate') }}</button>
+        </div>
+        <div class="input-group">
+          <input class="input{% if errors.new_password %} input-invalid{% endif %}" type="password"
+                 id="new_password" name="new_password" required autocomplete="new-password"
+                 placeholder="{{ t('register.password_placeholder') }}">
+          <button type="button" class="input-action" data-toggle-password="new_password"
+                  aria-label="{{ t('a11y.show_password') }}" title="{{ t('a11y.show_password') }}"
+                  data-label-show="{{ t('a11y.show_password') }}" data-label-hide="{{ t('a11y.hide_password') }}">{{ icon('eye', 18) }}</button>
+        </div>
+        <ul class="rule-list" id="password-rules" aria-live="polite">
+          {% for rule in password_rules %}
+            <li class="rule" data-rule="{{ rule.id }}">
+              <span class="rule-mark" aria-hidden="true">{{ icon('x', 14) }}</span>
+              <span class="rule-text">{{ rule.label }}{% if not rule.required %} {{ t('common.optional') }}{% endif %}</span>
+            </li>
+          {% endfor %}
+        </ul>
+        {% if errors.new_password %}<p class="field-error">{{ errors.new_password }}</p>{% endif %}
+      </div>
+
+      <div class="form-field">
+        <label for="confirm_password">{{ t('account.confirm_new_password') }}</label>
+        <div class="input-group">
+          <input class="input" type="password" id="confirm_password" name="confirm_password" required
+                 autocomplete="new-password" placeholder="{{ t('account.confirm_new_placeholder') }}">
+          <button type="button" class="input-action" data-toggle-password="confirm_password"
+                  aria-label="{{ t('a11y.show_password') }}" title="{{ t('a11y.show_password') }}"
+                  data-label-show="{{ t('a11y.show_password') }}" data-label-hide="{{ t('a11y.hide_password') }}">{{ icon('eye', 18) }}</button>
+        </div>
+        <p class="hint" id="match-status" data-match-status
+           data-text-empty="{{ t('register.no_match') }}"
+           data-text-match="{{ t('common.passwords_match') }}"
+           data-text-mismatch="{{ t('common.passwords_mismatch') }}">{{ t('register.no_match') }}</p>
+      </div>
+
+      <button class="btn btn-primary" type="submit">{{ t('account.update_password') }}</button>
+      <p class="hint">{{ t('account.update_password_hint') }}</p>
+    </form>
+  </section>
+
+  <section class="card">
+    <header class="card-head">
+      <span class="feature-icon" aria-hidden="true">{{ icon('shield', 22) }}</span>
+      <h2>{{ t('account.devices_card') }}</h2>
+    </header>
+
+    <p class="muted small">{{ t('account.devices_text') }}</p>
+
+    <ul class="device-list">
+      {% for row in sessions_rows %}
+        <li class="device-item{% if row['token_hash'] == current_hash %} is-current{% endif %}">
+          <div class="device-main">
+            <span class="device-name">
+              {{ row['user_agent']|device }}
+              {% if row['token_hash'] == current_hash %}<span class="chip chip-current">{{ t('account.this_device') }}</span>{% endif %}
+            </span>
+            <span class="muted small">
+              {{ row['ip_address'] or t('common.unknown_address') }}
+              &middot; {{ t('account.last_seen') }} {{ row['last_seen_at']|ago }}
+              &middot; {{ t('account.expires') }} {{ row['expires_at']|epoch }}
+            </span>
+          </div>
+          {% if row['token_hash'] != current_hash %}
+            <form method="post" action="{{ url_for('account.revoke_session', session_id=row['id']) }}" data-confirm="Sign out this device?">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-ghost btn-sm btn-danger" type="submit">
+                {{ icon('trash', 16) }} {{ t('account.device_sign_out') }}
+              </button>
+            </form>
+          {% endif %}
+        </li>
+      {% else %}
+        <li class="muted">{{ t('account.no_devices') }}</li>
+      {% endfor %}
+    </ul>
+
+    {% if sessions_rows|length > 1 %}
+      <form method="post" action="{{ url_for('account.revoke_all_sessions') }}" data-confirm="{{ t('account.sign_out_all_confirm') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-outline btn-sm" type="submit">
+          {{ icon('logout', 16) }} {{ t('account.sign_out_all') }}
+        </button>
+      </form>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('errors.bad_request_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<section class="card error-card">
+  <span class="error-code">400</span>
+  <span class="empty-icon" aria-hidden="true">{{ icon('alert', 30) }}</span>
+  <h1>{{ t('errors.bad_request_heading') }}</h1>
+  <p class="muted">
+    {{ reason or t('errors.bad_request_default') }}
+  </p>
+  <p class="muted small">{{ t('errors.bad_request_note') }}</p>
+  <div class="error-actions">
+    <a class="btn btn-primary" href="{{ url_for('main.index') }}">{{ icon('home', 16) }} {{ t('errors.back_home') }}</a>
+  </div>
+</section>
+{% endblock %}

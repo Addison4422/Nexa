@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('auth.verify_code_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<section class="card auth-card">
+  <h1>{{ t('auth.verify_code_title') }}</h1>
+  <p>{{ t('auth.verify_code_subtitle') }}</p>
+  <form method="post" class="stacked-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="form-field">
+      <label for="identifier">{{ t('auth.identifier') }}</label>
+      <input class="input" id="identifier" name="identifier" type="text"
+        placeholder="{{ t('auth.identifier_placeholder') }}" required>
+    </div>
+    <div class="form-field">
+      <label for="code">{{ t('auth.code_label') }}</label>
+      <input class="input promo-code-input" id="code" name="code" inputmode="numeric" maxlength="6"
+        autocomplete="one-time-code" required>
+      <p class="hint">{{ t('auth.code_hint') }}</p>
+    </div>
+    <button class="btn btn-primary btn-block" type="submit">
+      {{ icon('check', 18) }} {{ t('auth.verify_button') }}
+    </button>
+  </form>
+  <p class="auth-switch"><a href="{{ url_for('auth.forgot_password') }}">{{ t('auth.resend_code') }}</a></p>
+</section>
+{% endblock %}

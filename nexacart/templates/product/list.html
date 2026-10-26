@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('product.list_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('seller.workspace') }}</p>
+    <h1>{{ t('product.list_title') }}</h1>
+    <p class="muted">{{ t('product.list_subtitle') }}</p>
+  </div>
+  <div class="page-head-actions">
+    <a class="btn btn-primary" href="{{ url_for('product.register_product') }}">
+      {{ icon('plus', 18) }} {{ t('product.register_product') }}
+    </a>
+  </div>
+</div>
+
+{% if not products %}
+  <div class="card empty-card">
+    <span class="empty-icon">{{ icon('store', 48) }}</span>
+    <h2>{{ t('product.no_products') }}</h2>
+    <p>{{ t('product.no_products_text') }}</p>
+    <a class="btn btn-primary" href="{{ url_for('product.register_product') }}">
+      {{ t('product.register_first_product') }}
+    </a>
+  </div>
+{% else %}
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th scope="col">{{ t('product.col_product') }}</th>
+          <th scope="col">{{ t('product.col_price') }}</th>
+          <th scope="col">{{ t('product.col_stock') }}</th>
+          <th scope="col">{{ t('product.col_status') }}</th>
+          <th scope="col">{{ t('col_actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for product in products %}
+        <tr>
+          <td>
+            <div class="cell-user">
+              {% set image_url = url_for('product.product_image', filename=product['image_path']) if product['image_path'] else '' %}
+              {% if image_url %}<img src="{{ image_url }}" class="product-thumb" alt="">{% endif %}
+              <div class="mini-main">
+                <div class="mini-title">{{ product['name'] }}</div>
+                <div class="muted small">{{ t('product.by', seller_id=product['seller_id']) }}</div>
+              </div>
+            </div>
+          </td>
+          <td>{{ (product['price_cents'] or 0)|money }}</td>
+          <td>
+            <span class="status-pill {% if product['stock_quantity'] <= 0 %}status-suspended{% else %}status-active{% endif %}">
+              {{ product['stock_quantity'] }}
+            </span>
+          </td>
+          <td>
+            <span class="status-pill status-active">{{ t('product.active') }}</span>
+          </td>
+          <td class="cell-actions">
+            <a class="btn btn-outline btn-sm" href="{{ url_for('product.edit_product', product_id=product['id']) }}">
+              {{ t('product.edit') }}
+            </a>
+            <form method="post" action="{{ url_for('product.delete_product', product_id=product['id']) }}"
+                  class="inline-form" data-confirm="{{ t('product.confirm_delete', name=product['name']) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-danger btn-sm" type="submit">{{ icon('trash', 16) }}</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endif %}
+{% endblock %}

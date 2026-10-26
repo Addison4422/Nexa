@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('admin.sessions_page_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ t('admin.sessions_title') }}</h1>
+    <p class="muted">{{ t('admin.sessions_subtitle') }}</p>
+  </div>
+  <div class="page-head-actions">
+    <a class="btn btn-outline btn-sm" href="{{ url_for('admin.audit') }}">{{ icon('shield', 16) }} {{ t('admin.activity_log') }}</a>
+  </div>
+</div>
+
+<section class="card">
+  {% if sessions_rows %}
+    <div class="table-wrap">
+      <table class="data-table">
+        <caption class="visually-hidden">{{ t('admin.sessions_caption') }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{ t('admin.col_user') }}</th>
+            <th scope="col">{{ t('admin.col_device') }}</th>
+            <th scope="col">{{ t('admin.col_ip') }}</th>
+            <th scope="col">{{ t('admin.col_last_seen') }}</th>
+            <th scope="col">{{ t('admin.col_expires') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in sessions_rows %}
+            <tr>
+              <th scope="row" class="cell-user">
+                <span class="avatar avatar-sm" aria-hidden="true">{{ row['username'][0]|upper }}</span>
+                <span class="mini-main">
+                  <span class="mini-title">{{ row['username'] }}</span>
+                  <span class="muted small">{{ role_labels[row['role']] }}</span>
+                </span>
+              </th>
+              <td class="muted">{{ row['user_agent']|device }}</td>
+              <td class="muted small">{{ row['ip_address'] or '-' }}</td>
+              <td class="muted small">{{ row['last_seen_at']|ago }}</td>
+              <td class="muted small">{{ row['expires_at']|epoch }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <span class="empty-icon" aria-hidden="true">{{ icon('lock', 28) }}</span>
+      <p>{{ t('admin.nobody_signed_in') }}</p>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

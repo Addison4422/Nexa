@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('earnings.title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('seller.workspace') }}</p>
+    <h1>{{ t('earnings.title') }}</h1>
+    <p class="muted">{{ t('earnings.subtitle', fee=fee_percent) }}</p>
+  </div>
+  <div class="page-head-actions">
+    <a class="btn btn-outline btn-sm" href="{{ url_for('seller.transactions') }}">
+      {{ icon('list', 16) }} {{ t('transactions.seller_title') }}
+    </a>
+  </div>
+</div>
+
+{% if relief_promos %}
+<div class="relief-banner" role="status">
+  <span class="relief-banner-icon">{{ icon('gift', 20) }}</span>
+  <div class="relief-banner-body">
+    <strong>{{ t('earnings.relief_title') }}</strong>
+    {% for promo in relief_promos %}
+      <p class="relief-banner-item">
+        {{ icon('tag', 14) }} <span class="promo-chip promo-chip-admin">{{ promo['code'] }}</span>
+        -{{ promo['percent'] }}% · {{ t('promo.expires', when=promo['expires_at']|datetime) }}
+      </p>
+    {% endfor %}
+    <p class="relief-banner-hint">{{ t('earnings.relief_hint') }}</p>
+  </div>
+</div>
+{% endif %}
+
+<section class="stat-grid" aria-label="{{ t('earnings.title') }}">
+  <article class="stat-card">
+    <span class="stat-icon icon-green">{{ icon('currency', 20) }}</span>
+    <div>
+      <p class="stat-value">{{ stats.available_cents|money }}</p>
+      <p class="stat-label">{{ t('earnings.available') }}</p>
+    </div>
+  </article>
+  <article class="stat-card">
+    <span class="stat-icon icon-blue">{{ icon('chart', 20) }}</span>
+    <div>
+      <p class="stat-value">{{ stats.gross_cents|money }}</p>
+      <p class="stat-label">{{ t('earnings.gross') }}</p>
+    </div>
+  </article>
+  <article class="stat-card">
+    <span class="stat-icon icon-amber">{{ icon('currency', 20) }}</span>
+    <div>
+      <p class="stat-value">{{ stats.fee_cents|money }}</p>
+      <p class="stat-label">{{ t('earnings.platform_fee', fee=fee_percent) }}</p>
+    </div>
+  </article>
+  <article class="stat-card">
+    <span class="stat-icon icon-purple">{{ icon('check', 20) }}</span>
+    <div>
+      <p class="stat-value">{{ stats.paid_out_cents|money }}</p>
+      <p class="stat-label">{{ t('earnings.paid_out') }}</p>
+    </div>
+    <p class="stat-foot">{{ t('earnings.pending_foot', amount=stats.pending_payout_cents|money) }}</p>
+  </article>
+</section>
+
+{% if not is_admin %}
+<section class="card" style="max-width: 560px;">
+  <header class="card-head">
+    <span class="feature-icon" aria-hidden="true">{{ icon('currency', 22) }}</span>
+    <h2>{{ t('earnings.request_title') }}</h2>
+  </header>
+  <form method="post" class="stacked-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="form-field">
+      <label for="amount">{{ t('earnings.amount') }}</label>
+      <div class="input-group">
+        <span style="display:grid;place-items:center;height:100%;padding-inline-start:10px;color:var(--text-mute);">{{
+          currencies[base_currency]['symbol'] }}</span>
+        <input class="input" id="amount" name="amount" type="number" step="0.01" min="0.01"
+          max="{{ '%.2f'|format(stats.available_cents / 100) }}" required>
+      </div>
+      <p class="hint">{{ t('earnings.amount_hint') }}</p>
+    </div>
+    <button class="btn btn-primary" type="submit">{{ icon('arrow-right', 16) }} {{ t('earnings.request_button')
+      }}</button>
+  </form>
+</section>
+{% endif %}
+
+<section class="card">
+  <header class="card-head">
+    <span class="feature-icon" aria-hidden="true">{{ icon('list', 22) }}</span>
+    <h2>{{ t('earnings.payouts_title') }}</h2>
+  </header>
+  {% if payouts %}
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          {% if is_admin %}<th scope="col">{{ t('admin.col_user') }}</th>{% endif %}
+          <th scope="col">{{ t('earnings.col_requested') }}</th>
+          <th scope="col" style="text-align:end">{{ t('transactions.col_amount') }}</th>
+          <th scope="col">{{ t('transactions.col_status') }}</th>
+          {% if is_admin %}<th scope="col">{{ t('admin.col_actions') }}</th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for payout in payouts %}
+        <tr>
+          {% if is_admin %}<td>@{{ payout['username'] }}</td>{% endif %}
+          <td>{{ payout['requested_at']|datetime }}</td>
+          <td style="text-align:end">{{ payout['amount_cents']|money }}</td>
+          <td>
+            {% if payout['status'] == 'paid' %}
+            <span class="status-pill status-active">{{ t('payouts.paid') }}</span>
+            {% elif payout['status'] == 'rejected' %}
+            <span class="status-pill status-suspended">{{ t('payouts.rejected') }}</span>
+            {% else %}
+            <span class="status-pill status-warning">{{ t('payouts.requested') }}</span>
+            {% endif %}
+            {% if payout['note'] %}<div class="muted small">{{ payout['note'] }}</div>{% endif %}
+          </td>
+          {% if is_admin %}
+          <td class="cell-actions">
+            {% if payout['status'] == 'requested' %}
+            <form method="post" class="approval-form"
+              action="{{ url_for('admin.process_payout', payout_id=payout['id']) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-primary btn-sm" name="decision" value="paid">{{ icon('check', 16) }} {{
+                t('payouts.mark_paid') }}</button>
+              <button class="btn btn-danger btn-sm" name="decision" value="rejected">{{ icon('x', 16) }} {{
+                t('admin.reject') }}</button>
+            </form>
+            {% else %}<span class="muted small">{{ t('seller.no_action_needed') }}</span>{% endif %}
+          </td>
+          {% endif %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted">{{ t('earnings.no_payouts') }}</p>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('weather.history_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('weather.eyebrow') }}</p>
+    <h1>{{ t('weather.history_title_plain') }}</h1>
+    <p class="muted">{{ t('weather.history_subtitle') }}</p>
+  </div>
+  <div class="page-head-actions">
+    <a class="btn btn-outline btn-sm" href="{{ url_for('weather.admin_stats') }}">{{ icon('chart', 16) }} {{
+      t('weather.stats_link') }}</a>
+    <a class="btn btn-outline btn-sm" href="{{ url_for('admin.dashboard') }}">{{ icon('arrow-left', 16) }} {{
+      t('nav.dashboard') }}</a>
+  </div>
+</div>
+
+<section class="card">
+  {% if entries %}
+  <form method="post" action="{{ url_for('weather.admin_clear') }}" class="history-clear"
+    data-confirm="{{ t('weather.confirm_clear') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-danger btn-sm" type="submit">{{ icon('trash', 16) }} {{ t('weather.clear_button') }}</button>
+  </form>
+  <div class="table-wrap">
+    <table class="data-table">
+      <caption class="visually-hidden">{{ t('weather.table_caption') }}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{{ t('weather.col_query') }}</th>
+          <th scope="col">{{ t('weather.col_type') }}</th>
+          <th scope="col">{{ t('weather.col_city') }}</th>
+          <th scope="col">{{ t('weather.col_status') }}</th>
+          <th scope="col">{{ t('admin.col_when') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in entries %}
+        <tr>
+          <td><code>{{ entry['query_value'] }}</code></td>
+          <td><span class="chip">{{ t('weather.type_' ~ entry['query_type']) }}</span></td>
+          <td>{{ entry['city_label'] or '-' }}</td>
+          <td>
+            {% if entry['status'] == 'ok' %}
+            <span class="status-pill status-active">{{ t('weather.status_ok') }}</span>
+            {% else %}
+            <span class="status-pill status-suspended">{{ t('weather.status_' ~ entry['status']) }}</span>
+            {% endif %}
+          </td>
+          <td class="muted small" title="{{ entry['created_at']|epoch }}">{{ entry['created_at']|ago }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% with endpoint='weather.admin_history' %}{% include "partials/_pagination.html" %}{% endwith %}
+  {% else %}
+  <div class="empty-state">
+    <span class="empty-icon" aria-hidden="true">{{ icon('sun', 28) }}</span>
+    <p>{{ t('weather.no_history') }}</p>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

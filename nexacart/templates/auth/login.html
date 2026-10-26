@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('login.page_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="auth-layout">
+  <section class="card auth-card">
+    <header class="card-head">
+      <span class="feature-icon" aria-hidden="true">{{ icon('lock', 22) }}</span>
+      <h1>{{ t('login.title') }}</h1>
+      <p class="muted">{{ t('login.subtitle') }}</p>
+    </header>
+
+    {% if errors %}
+      <div class="alert alert-error" role="alert">
+        <span class="alert-icon" aria-hidden="true">{{ icon('alert', 18) }}</span>
+        <p class="alert-text">{{ errors|join(' ') }}</p>
+      </div>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('auth.login', next=request.args.get('next')) }}" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="form-field">
+        <label for="identifier">{{ t('login.identifier') }}</label>
+        <input class="input" type="text" id="identifier" name="identifier" required
+               autocomplete="username" autofocus value="{{ form.identifier }}"
+               placeholder="{{ t('login.identifier_placeholder') }}">
+      </div>
+
+      <div class="form-field">
+        <div class="label-row">
+          <label for="password">{{ t('login.password') }}</label>
+        </div>
+        <div class="input-group">
+          <input class="input" type="password" id="password" name="password" required
+                 autocomplete="current-password" placeholder="{{ t('login.password_placeholder') }}">
+          <button type="button" class="input-action" data-toggle-password="password"
+                  aria-label="{{ t('a11y.show_password') }}" title="{{ t('a11y.show_password') }}"
+                  data-label-show="{{ t('a11y.show_password') }}" data-label-hide="{{ t('a11y.hide_password') }}">{{ icon('eye', 18) }}</button>
+        </div>
+      </div>
+
+      <label class="checkbox">
+        <input type="checkbox" name="remember_me" value="1" {% if form.remember_me %}checked{% endif %}>
+        <span>{{ t('login.remember') }}</span>
+      </label>
+
+      <button class="btn btn-primary btn-block btn-lg" type="submit">
+        {{ t('login.submit') }} {{ icon('arrow-right', 18) }}
+      </button>
+      <p class="form-foot-link">
+        <a href="{{ url_for('auth.forgot_password') }}">{{ t('auth.forgot_title') }}?</a>
+      </p>
+    </form>
+
+    <p class="auth-switch">
+      {{ t('login.no_account') }} <a href="{{ url_for('auth.register') }}">{{ t('login.create_one') }}</a>
+    </p>
+
+    <details class="demo-note">
+      <summary>{{ t('login.demo_summary') }}</summary>
+      <ul class="demo-list">
+        <li><strong>{{ t('role.admin') }}</strong> &mdash; <code>admin</code> / <code>Admin@12345</code></li>
+        <li><strong>{{ t('role.seller') }}</strong> &mdash; <code>seller_demo</code> / <code>Seller@12345</code></li>
+        <li><strong>{{ t('role.buyer') }}</strong> &mdash; <code>buyer_demo</code> / <code>Buyer@12345</code></li>
+      </ul>
+      <p class="muted small">{{ t('login.demo_note') }}</p>
+    </details>
+  </section>
+
+  <aside class="auth-aside">
+    <h2>{{ t('login.aside_title') }}</h2>
+    <ol class="step-list">
+      <li><strong>{{ t('login.step_one_title') }}</strong><span>{{ t('login.step_one_text') }}</span></li>
+      <li><strong>{{ t('login.step_two_title') }}</strong><span>{{ t('login.step_two_text') }}</span></li>
+      <li><strong>{{ t('login.step_three_title') }}</strong><span>{{ t('login.step_three_text') }}</span></li>
+    </ol>
+    <p class="muted small">{{ t('login.aside_note') }}</p>
+  </aside>
+</div>
+{% endblock %}

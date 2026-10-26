@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('seller.orders_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('seller.workspace') }}</p>
+    <h1>{{ t('seller.orders_title') }}</h1>
+    <p class="muted">{{ t('seller.orders_subtitle') }}</p>
+  </div>
+  <div class="page-head-actions">
+    <a class="btn btn-outline btn-sm" href="{{ url_for('seller.transactions') }}">
+      {{ icon('list', 16) }} {{ t('transactions.seller_title') }}
+    </a>
+  </div>
+</div>
+
+{% if rows %}
+<div class="table-wrap">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th scope="col">{{ t('transactions.col_reference') }}</th>
+        <th scope="col">{{ t('transactions.col_buyer') }}</th>
+        <th scope="col">{{ t('transactions.col_items') }}</th>
+        <th scope="col" style="text-align:end">{{ t('transactions.col_amount') }}</th>
+        <th scope="col">{{ t('seller.col_fulfillment') }}</th>
+        <th scope="col">{{ t('admin.col_actions') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td><code>{{ row['reference'] }}</code></td>
+        <td>@{{ row['buyer_username'] }}</td>
+        <td>{{ row['items'] }}</td>
+        <td style="text-align:end">{{ row['amount_cents']|money }}</td>
+        <td>
+          {% if row['fulfillment_status'] == 'delivered' %}
+          <span class="status-pill status-active">{{ t('fulfillment.delivered') }}</span>
+          {% elif row['fulfillment_status'] == 'shipped' %}
+          <span class="status-pill status-warning">{{ t('fulfillment.shipped') }}</span>
+          {% else %}
+          <span class="status-pill">{{ t('fulfillment.processing') }}</span>
+          {% endif %}
+          {% if row['fulfillment_note'] %}
+          <div class="muted small">{{ row['fulfillment_note'] }}</div>
+          {% endif %}
+        </td>
+        <td class="cell-actions">
+          {% if row['fulfillment_status'] == 'processing' %}
+          <form method="post" class="approval-form"
+            action="{{ url_for('seller.fulfill_order', order_id=row['order_id']) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="status" value="shipped">
+            <input class="input input-sm" type="text" name="note" maxlength="200"
+              placeholder="{{ t('seller.tracking_note') }}">
+            <button class="btn btn-primary btn-sm" type="submit">
+              {{ icon('arrow-right', 16) }} {{ t('fulfillment.ship') }}
+            </button>
+          </form>
+          {% elif row['fulfillment_status'] == 'shipped' %}
+          <form method="post" class="approval-form"
+            action="{{ url_for('seller.fulfill_order', order_id=row['order_id']) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="status" value="delivered">
+            <button class="btn btn-primary btn-sm" type="submit">
+              {{ icon('check', 16) }} {{ t('fulfillment.mark_delivered') }}
+            </button>
+          </form>
+          {% else %}
+          <span class="muted small">{{ t('seller.no_action_needed') }}</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card empty-card">
+  <span class="empty-icon">{{ icon('cart', 48) }}</span>
+  <h2>{{ t('seller.orders_empty_title') }}</h2>
+  <p>{{ t('seller.orders_empty_text') }}</p>
+</div>
+{% endif %}
+{% endblock %}

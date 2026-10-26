@@ -1,0 +1,20 @@
+{% from "partials/_icons.html" import icon %}
+{% if messages %}
+  <div class="flash-stack" role="status" aria-live="polite">
+    {% for category, message in messages %}
+      {% set tone = {'success': 'alert-success', 'error': 'alert-error', 'warning': 'alert-warning', 'info': 'alert-info'}.get(category, 'alert-info') %}
+      <div class="alert {{ tone }}">
+        <span class="alert-icon" aria-hidden="true">
+          {%- if category == 'success' -%}{{ icon('check', 18) }}
+          {%- elif category == 'error' -%}{{ icon('alert', 18) }}
+          {%- elif category == 'warning' -%}{{ icon('alert', 18) }}
+          {%- else -%}{{ icon('info', 18) }}{%- endif -%}
+        </span>
+        <p class="alert-text">{{ message }}</p>
+        <button type="button" class="alert-close" data-dismiss-alert aria-label="{{ t('a11y.dismiss_message') }}">
+          {{ icon('x', 16) }}
+        </button>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}

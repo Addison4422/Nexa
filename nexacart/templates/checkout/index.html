@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('checkout.page_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('checkout.eyebrow') }}</p>
+    <h1>{{ t('checkout.title') }}</h1>
+    <p class="muted">{{ t('checkout.subtitle') }}</p>
+  </div>
+  <div class="page-head-actions">
+    <a class="btn btn-outline" href="{{ url_for('cart.view') }}">
+      {{ icon('arrow-left', 16) }} {{ t('cart.back_to_cart') }}
+    </a>
+  </div>
+</div>
+
+{% if not lines %}
+  <div class="card empty-card">
+    <span class="empty-icon">{{ icon('cart', 48) }}</span>
+    <h2>{{ t('checkout.empty_title') }}</h2>
+    <p>{{ t('checkout.empty_text') }}</p>
+    <a class="btn btn-primary" href="{{ url_for('product.catalogue') }}">
+      {{ t('cart.continue_shopping') }} {{ icon('arrow-right', 16) }}
+    </a>
+  </div>
+{% else %}
+  <div class="grid-2">
+    <section class="card">
+      <header class="card-head"><h2>{{ t('checkout.order_summary') }}</h2></header>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th scope="col">{{ t('cart.col_item') }}</th>
+              <th scope="col" style="text-align:end">{{ t('cart.col_price') }}</th>
+              <th scope="col" style="text-align:center">{{ t('cart.col_quantity') }}</th>
+              <th scope="col" style="text-align:end">{{ t('cart.col_subtotal') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for line in lines %}
+            <tr>
+              <td>
+                <div class="mini-main">
+                  <div class="mini-title">{{ line['name'] }}</div>
+                  <div class="muted small">{{ t('checkout.qty', n=line['quantity']) }}</div>
+                </div>
+              </td>
+              <td style="text-align:end">{{ line['price_cents']|money }}</td>
+              <td style="text-align:center">{{ line['quantity'] }}</td>
+              <td style="text-align:end">{{ (line['price_cents'] * line['quantity'])|money }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="cart-totals" style="margin-top:var(--space-4); padding-top:var(--space-3); border-top:1px solid var(--border);">
+        <div class="totals-row"><span><strong>{{ t('cart.subtotal') }}</strong></span>
+          <span style="text-align:end"><strong>{{ subtotal_cents|money }}</strong></span></div>
+        <div class="totals-row"><span>{{ t('checkout.total', currency=currency) }}</span>
+          <span style="text-align:end"><strong>{{ amount_display }}</strong></span></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <header class="card-head"><h2>{{ t('checkout.payment') }}</h2></header>
+      <form method="post" action="{{ url_for('checkout.pay') }}" class="stacked-form" data-confirm="{{ t('checkout.confirm_pay') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-field">
+          <label>{{ t('checkout.amount') }}</label>
+          <p class="muted small">{{ amount_display }}</p>
+        </div>
+        <div class="form-field">
+          <label>{{ t('checkout.currency') }}</label>
+          <p class="muted small">{{ currencies[currency]['name'] }} ({{ currency }})</p>
+        </div>
+        <div class="form-field">
+          <label>{{ t('checkout.customer_email') }}</label>
+          <p class="muted small">{{ current_user['email'] }}</p>
+        </div>
+        <fieldset class="form-field">
+          <legend>{{ t('checkout.payment_method') }}</legend>
+          <div class="role-choice">
+            <label class="role-card">
+              <input type="radio" name="payment_method" value="mtn_momo" checked>
+              <span class="role-card-body">
+                <span class="role-card-title">{{ icon('phone', 18) }} MTN Mobile Money</span>
+                <span class="role-card-text">{{ t('checkout.method_momo_hint') }}</span>
+              </span>
+            </label>
+            <label class="role-card">
+              <input type="radio" name="payment_method" value="airtel_money">
+              <span class="role-card-body">
+                <span class="role-card-title">{{ icon('phone', 18) }} Airtel Money</span>
+                <span class="role-card-text">{{ t('checkout.method_airtel_hint') }}</span>
+              </span>
+            </label>
+            <label class="role-card">
+              <input type="radio" name="payment_method" value="card">
+              <span class="role-card-body">
+                <span class="role-card-title">{{ icon('credit-card', 18) }} {{ t('checkout.method_card') }}</span>
+                <span class="role-card-text">{{ t('checkout.method_card_hint') }}</span>
+              </span>
+            </label>
+          </div>
+        </fieldset>
+        <div class="alert alert-info">
+          {{ icon('info', 16) }}
+          {% if flutterwave_configured %}
+            {{ t('checkout.real_mode') }}
+          {% else %}
+            {{ t('checkout.simulated_mode') }}
+          {% endif %}
+        </div>
+        <button class="btn btn-primary btn-lg btn-block" type="submit">
+          {{ icon('credit-card', 18) }} {{ t('checkout.pay_now') }}
+        </button>
+      </form>
+    </section>
+  </div>
+{% endif %}
+{% endblock %}

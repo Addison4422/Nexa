@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('about.title') }} - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('about.nav') }}</p>
+    <h1>{{ t('about.title') }}</h1>
+    <p class="muted">{{ t('about.intro') }}</p>
+  </div>
+</div>
+
+<section class="card" style="margin-bottom: var(--space-5);">
+  <header class="card-head">
+    <span class="feature-icon" aria-hidden="true">{{ icon('info', 22) }}</span>
+    <h2>{{ t('about.general_title') }}</h2>
+  </header>
+  <p class="muted">{{ t('about.general_lead') }}</p>
+  <ul class="check-list">
+    {% for step in about_general %}
+      <li>{{ icon('check', 16) }} <span>{{ step }}</span></li>
+    {% endfor %}
+  </ul>
+</section>
+
+<div class="grid-2">
+  <section class="card">
+    <header class="card-head">
+      <span class="feature-icon" aria-hidden="true">{{ icon('shield', 22) }}</span>
+      <h2>{{ t('about.admin_title') }}</h2>
+    </header>
+    <p class="muted">{{ t('about.admin_lead') }}</p>
+    <a class="btn btn-outline btn-sm" href="{{ url_for('main.about_role', role='admin') }}">
+      {{ t('about.read_more') }} {{ icon('arrow-right', 16) }}
+    </a>
+  </section>
+
+  <section class="card">
+    <header class="card-head">
+      <span class="feature-icon" aria-hidden="true">{{ icon('store', 22) }}</span>
+      <h2>{{ t('about.seller_title') }}</h2>
+    </header>
+    <p class="muted">{{ t('about.seller_lead') }}</p>
+    <a class="btn btn-outline btn-sm" href="{{ url_for('main.about_role', role='seller') }}">
+      {{ t('about.read_more') }} {{ icon('arrow-right', 16) }}
+    </a>
+  </section>
+
+  <section class="card">
+    <header class="card-head">
+      <span class="feature-icon" aria-hidden="true">{{ icon('cart', 22) }}</span>
+      <h2>{{ t('about.buyer_title') }}</h2>
+    </header>
+    <p class="muted">{{ t('about.buyer_lead') }}</p>
+    <a class="btn btn-outline btn-sm" href="{{ url_for('main.about_role', role='buyer') }}">
+      {{ t('about.read_more') }} {{ icon('arrow-right', 16) }}
+    </a>
+  </section>
+</div>
+{% endblock %}

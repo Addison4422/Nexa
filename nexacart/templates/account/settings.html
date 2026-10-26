@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('account.settings_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('account.advanced_settings') }}</p>
+    <h1>{{ t('account.settings_title') }}</h1>
+    <p class="muted">{{ t('account.settings_subtitle') }}</p>
+  </div>
+</div>
+
+<div class="grid-2">
+  {% if current_user and current_user['role'] != 'admin' %}
+  <section class="card">
+    <header class="card-head">
+      <span class="feature-icon" aria-hidden="true">{{ icon('currency', 22) }}</span>
+      <h2>{{ t('account.currency') }}</h2>
+    </header>
+    <form method="post" class="stacked-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="currency">
+      <div class="form-field">
+        <label for="currency">{{ t('account.currency_preference') }}</label>
+        <select class="input" id="currency" name="currency">
+          {% for code, info in currencies.items() %}
+            <option value="{{ code }}" {{ 'selected' if code == current_currency }}>
+              {{ info['name'] }} ({{ code }}) &mdash; {{ info['symbol'] }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <button class="btn btn-primary" type="submit">{{ icon('check', 16) }} {{ t('account.save') }}</button>
+    </form>
+  </section>
+  {% endif %}
+
+  <section class="card">
+    <header class="card-head">
+      <span class="feature-icon" aria-hidden="true">{{ icon('ban', 22) }}</span>
+      <h2>{{ t('account.danger_zone') }}</h2>
+    </header>
+    <p class="muted small">{{ t('account.danger_note') }}</p>
+    <form method="post" class="stacked-form" data-confirm="{{ t('account.confirm_delete_account') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="delete_account">
+      <div class="form-field">
+        <label for="password">{{ t('auth.current_password') }} <span class="muted" style="font-weight:400">*</span></label>
+        <input class="input" id="password" name="password" type="password" required>
+        {% if errors.password %}<p class="field-error">{{ errors.password }}</p>{% endif %}
+      </div>
+      <div class="checkbox">
+        <input class="input" id="delete_confirm" name="delete_confirm" type="checkbox">
+        <label for="delete_confirm">{{ t('account.delete_confirm_label') }}</label>
+        {% if errors.confirm %}<p class="field-error">{{ errors.confirm }}</p>{% endif %}
+      </div>
+      <button class="btn btn-danger btn-block" type="submit">
+        {{ icon('trash', 16) }} {{ t('account.delete_account_button') }}
+      </button>
+    </form>
+  </section>
+</div>
+{% endblock %}

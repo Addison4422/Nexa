@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('payment.simulate_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('payment.eyebrow') }}</p>
+    <h1>{{ method['label'] }}</h1>
+    <p class="muted">{{ t('payment.simulate_subtitle', reference=order['reference']) }}</p>
+  </div>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <header class="card-head"><h2>{{ t('checkout.order') }}</h2></header>
+    <dl class="detail-list">
+      <div><dt>{{ t('checkout.reference') }}</dt><dd>{{ order['reference'] }}</dd></div>
+      <div><dt>{{ t('checkout.amount') }}</dt><dd>{{ order['amount_cents']|money }}</dd></div>
+      <div><dt>{{ t('checkout.currency') }}</dt><dd>{{ order['currency'] }}</dd></div>
+      <div><dt>{{ t('checkout.payment_method') }}</dt><dd>{{ method['label'] }}</dd></div>
+    </dl>
+  </section>
+</div>
+
+<form method="post" action="{{ url_for('checkout.simulate_confirm', reference=order['reference']) }}"
+      class="card stacked-form" data-confirm="{{ t('payment.confirm_pay') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <input type="hidden" name="payment_method" value="{{ method_key }}">
+
+  {% if method_key == 'mtn_momo' %}
+    <div class="mommo-banner mommo-mtn">MTN Mobile Money</div>
+    <div class="form-field">
+      <label for="phone">{{ t('payment.phone_label') }} ({{ method['prefix'] }}xxxxxxxx)</label>
+      <input class="input" id="phone" name="phone" type="tel"
+             placeholder="{{ method['prefix'] }}381234567" required>
+      <p class="hint">{{ t('payment.momo_hint') }}</p>
+    </div>
+  {% elif method_key == 'airtel_money' %}
+    <div class="mommo-banner mommo-airtel">Airtel Money</div>
+    <div class="form-field">
+      <label for="phone">{{ t('payment.phone_label') }} ({{ method['prefix'] }}xxxxxxxx)</label>
+      <input class="input" id="phone" name="phone" type="tel"
+             placeholder="{{ method['prefix'] }}381234567" required>
+      <p class="hint">{{ t('payment.momo_hint') }}</p>
+    </div>
+  {% else %}
+    <div class="form-field">
+      <label for="card_number">{{ t('payment.card_number') }}</label>
+      <input class="input" id="card_number" name="card_number" inputmode="numeric"
+             autocomplete="cc-number" placeholder="4242 4242 4242 4242" required>
+    </div>
+    <div class="grid-2">
+      <div class="form-field">
+        <label for="expiry">{{ t('payment.card_expiry') }}</label>
+        <input class="input" id="expiry" name="expiry" placeholder="12/29" autocomplete="cc-exp" required>
+      </div>
+      <div class="form-field">
+        <label for="cvv">{{ t('payment.card_cvv') }}</label>
+        <input class="input" id="cvv" name="cvv" inputmode="numeric" maxlength="4" autocomplete="cc-csc" required>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="form-field">
+    <label>{{ t('payment.confirm_amount') }}</label>
+    <p class="muted small">{{ order['amount_cents']|money }}</p>
+  </div>
+  <div class="alert alert-warning">
+    {{ icon('alert', 16) }} {{ t('payment.demo_notice') }}
+  </div>
+  <div class="page-head-actions" style="margin-top:0;">
+    <button class="btn btn-primary" type="submit">
+      {{ icon('check', 18) }} {{ t('payment.confirm_pay_button') }}
+    </button>
+    <a class="btn btn-outline" href="{{ url_for('checkout.index') }}">{{ t('cart.back_to_cart') }}</a>
+  </div>
+</form>
+{% endblock %}

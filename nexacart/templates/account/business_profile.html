@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('account.business_title') }} - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('nav.account') }}</p>
+    <h1>{{ t('account.business_title') }}</h1>
+    <p class="muted">{{ t('account.business_subtitle') }}</p>
+  </div>
+</div>
+
+<form method="post" class="card form-card narrow" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="form-field">
+    <label for="business_name">{{ t('account.business_name') }}</label>
+    <input class="input" id="business_name" name="business_name" maxlength="120"
+           value="{{ form.business_name }}">
+    {% if errors.business_name %}<p class="field-error">{{ errors.business_name }}</p>{% endif %}
+  </div>
+
+  <div class="form-field">
+    <label for="country">{{ t('account.country') }}</label>
+    <input class="input" id="country" name="country" maxlength="60"
+           value="{{ form.country }}">
+    {% if errors.country %}<p class="field-error">{{ errors.country }}</p>{% endif %}
+  </div>
+
+  <div class="form-field">
+    <label for="phone_number">{{ t('account.phone_number') }}</label>
+    <input class="input" id="phone_number" name="phone_number" maxlength="40"
+           value="{{ form.phone_number }}" placeholder="+233201234567">
+    {% if errors.phone_number %}<p class="field-error">{{ errors.phone_number }}</p>{% endif %}
+  </div>
+
+  <div class="form-field">
+    <label for="business_description">{{ t('account.business_description') }}</label>
+    <textarea class="input" id="business_description" name="business_description"
+              rows="4" maxlength="500">{{ form.business_description }}</textarea>
+    <p class="hint">{{ t('account.business_description_hint') }}</p>
+    {% if errors.business_description %}<p class="field-error">{{ errors.business_description }}</p>{% endif %}
+  </div>
+
+  <button class="btn btn-primary" type="submit">{{ icon('check', 16) }} {{ t('account.save') }}</button>
+</form>
+{% endblock %}

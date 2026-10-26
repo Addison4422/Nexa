@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('about.' ~ role ~ '_title') }} - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('about.nav') }}</p>
+    <h1>{{ t('about.' ~ role ~ '_title') }}</h1>
+    <p class="muted">{{ lead }}</p>
+  </div>
+  <div class="page-head-actions">
+    <a class="btn btn-outline btn-sm" href="{{ url_for('main.about') }}">
+      {{ icon('arrow-left', 16) }} {{ t('about.back') }}
+    </a>
+  </div>
+</div>
+
+<section class="card">
+  <ul class="check-list">
+    {% for step in steps %}
+    <li>{{ icon('check', 16) }} <span>{{ step }}</span></li>
+    {% endfor %}
+  </ul>
+  <p class="muted small">{{ t('about.no_account_note') }}
+    <a href="{{ url_for('auth.register') }}">{{ t('nav.create_account') }}</a>
+  </p>
+</section>
+{% endblock %}

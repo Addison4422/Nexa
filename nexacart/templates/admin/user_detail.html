@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ target['full_name'] }} - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="breadcrumb"><a href="{{ url_for('admin.users') }}">{{ t('admin.users_title') }}</a> <span aria-hidden="true">/</span> {{ target['username'] }}</p>
+    <h1>{{ target['full_name'] }}</h1>
+    <p class="muted">@{{ target['username'] }} &middot; {{ target['email'] }}</p>
+  </div>
+  <div class="page-head-actions">
+    <a class="btn btn-outline btn-sm" href="{{ url_for('admin.users') }}">{{ icon('arrow-left', 16) }} {{ t('admin.back_to_users') }}</a>
+  </div>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <header class="card-head">
+      <span class="feature-icon" aria-hidden="true">{{ icon('user', 22) }}</span>
+      <h2>{{ t('admin.detail_account') }}</h2>
+    </header>
+
+    <dl class="detail-list">
+      <div><dt>{{ t('admin.col_role') }}</dt>
+        <dd><span class="role-badge {{ target['role']|role_css }}">{{ role_labels[target['role']] }}</span></dd></div>
+      <div><dt>{{ t('admin.col_status') }}</dt>
+        <dd><span class="status-pill status-{{ target['status'] }}">{{ t('status.' ~ target['status']) }}</span></dd></div>
+      <div><dt>{{ t('admin.col_registered') }}</dt><dd>{{ target['created_at']|datetime }}</dd></div>
+      <div><dt>{{ t('admin.col_last_sign_in') }}</dt><dd>{{ target['last_login_at']|datetime }}</dd></div>
+      <div><dt>{{ t('admin.failed_attempts') }}</dt><dd>{{ target['failed_attempts']|number }}</dd></div>
+    </dl>
+  </section>
+
+  <section class="card">
+    <header class="card-head">
+      <span class="feature-icon" aria-hidden="true">{{ icon('shield', 22) }}</span>
+      <h2>{{ t('admin.detail_administration') }}</h2>
+    </header>
+
+    <form method="post" action="{{ url_for('admin.change_role', user_id=target['id']) }}" class="stacked-form"
+          data-confirm="{{ t('admin.change_role_confirm') }}" id="role-change-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-field">
+        <label for="role">{{ t('admin.change_role') }}</label>
+        <select class="input" id="role" name="role">
+          {% for value, label in role_labels.items() %}
+            <option value="{{ value }}" {% if target['role'] == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <p class="hint">{{ t('admin.change_role_hint') }}</p>
+      </div>
+      <div class="form-field" id="admin-password-field" hidden>
+        <label for="current_password">{{ t('admin.admin_password_label') }}</label>
+        <input class="input" type="password" id="current_password" name="current_password" autocomplete="current-password">
+        <p class="hint">{{ t('admin.admin_password_hint') }}</p>
+      </div>
+      <button class="btn btn-primary" type="submit">{{ t('admin.update_role') }}</button>
+    </form>
+    <div id="role-change-note" class="alert alert-info" style="margin-top: var(--space-3);" hidden>
+      {{ icon('info', 16) }} {{ t('admin.change_role_note') }}
+    </div>
+
+    <hr class="rule">
+
+    <form method="post" action="{{ url_for('admin.change_status', user_id=target['id']) }}" class="stacked-form" data-confirm="Change this account status?">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="status" value="{{ 'active' if target['status'] == 'suspended' else 'suspended' }}">
+      {% if target['status'] == 'suspended' %}
+        <button class="btn btn-primary" type="submit">{{ icon('refresh', 16) }} {{ t('admin.reactivate') }}</button>
+        <p class="hint">{{ t('admin.reactivate_hint') }}</p>
+      {% else %}
+        <button class="btn btn-danger" type="submit">{{ icon('ban', 16) }} {{ t('admin.suspend') }}</button>
+        <p class="hint">{{ t('admin.suspend_hint') }}</p>
+      {% endif %}
+    </form>
+  </section>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <header class="card-head">
+      <span class="feature-icon" aria-hidden="true">{{ icon('lock', 22) }}</span>
+      <h2>{{ t('admin.user_sessions') }}</h2>
+    </header>
+    {% if user_sessions %}
+      <ul class="device-list">
+        {% for row in user_sessions %}
+          <li class="device-item">
+            <div class="device-main">
+              <span class="device-name">{{ row['user_agent']|device }}</span>
+              <span class="muted small">
+                {{ row['ip_address'] or t('common.unknown_address') }}
+                &middot; {{ t('account.last_seen') }} {{ row['last_seen_at']|ago }}
+              </span>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="muted">{{ t('admin.user_not_signed_in') }}</p>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <header class="card-head">
+      <span class="feature-icon" aria-hidden="true">{{ icon('list', 22) }}</span>
+      <h2>{{ t('admin.activity_card') }}</h2>
+    </header>
+    {% if activity %}
+      <ul class="timeline">
+        {% for entry in activity %}
+          <li>
+            <span class="timeline-dot" aria-hidden="true"></span>
+            <span class="timeline-body">
+              <strong>{{ audit_label(entry['action']) }}</strong>
+              <span class="muted small">{{ entry['created_at']|ago }}</span>
+              {% if entry['detail'] %}<span class="muted small">{{ entry['detail'] }}</span>{% endif %}
+            </span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="muted">{{ t('admin.no_user_activity') }}</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('admin.approvals_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('admin.approvals_eyebrow') }}</p>
+    <h1>{{ t('admin.approvals_title') }}</h1>
+    <p class="muted">{{ t('admin.approvals_lead') }}</p>
+  </div>
+</div>
+
+{% if pending %}
+<div class="grid-2">
+  {% for req in pending %}
+  <section class="card approval-card" data-role="{{ req.role }}">
+    <header class="card-head">
+      <span class="avatar" aria-hidden="true">{{ req.username[0]|upper }}</span>
+      <div>
+        <h2>{{ req.full_name }}</h2>
+        <p class="muted">@{{ req.username }} &middot; {{ t('role.' ~ req.role) }}</p>
+      </div>
+    </header>
+    <dl class="meta-grid">
+      <div>
+        <dt>{{ t('admin.detail_account') }}</dt>
+        <dd>{{ req.email }}</dd>
+      </div>
+      <div>
+        <dt>{{ t('account.business_name') }}</dt>
+        <dd>{{ req.business_name or '—' }}</dd>
+      </div>
+      <div>
+        <dt>{{ t('account.country') }}</dt>
+        <dd>{{ req.country or '—' }}</dd>
+      </div>
+      <div>
+        <dt>{{ t('account.phone_number') }}</dt>
+        <dd>{{ req.phone_number or '—' }}</dd>
+      </div>
+      <div class="meta-full">
+        <dt>{{ t('account.business_description') }}</dt>
+        <dd>{{ req.business_description or '—' }}</dd>
+      </div>
+    </dl>
+    {% if req.role == 'buyer' %}
+      <div class="alert alert-warning" role="alert">
+        <span class="alert-icon" aria-hidden="true">{{ icon('alert', 18) }}</span>
+        <p class="alert-text">{{ t('errors.action_not_allowed') }}</p>
+      </div>
+    {% endif %}
+    <form method="post" class="approval-actions" action="{{ url_for('admin.user_decision', user_id=req.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="user_id" value="{{ req.id }}">
+      <input class="input input-sm" type="password" name="current_password"
+             autocomplete="current-password"
+             placeholder="{{ t('admin.admin_password_required') }}" required>
+      <button class="btn btn-primary btn-sm" name="decision" value="approve">
+        {{ icon('check', 16) }} {{ t('common.confirm') }}
+      </button>
+      <button class="btn btn-danger btn-sm" name="decision" value="reject">
+        {{ icon('x', 16) }} {{ t('admin.reject') }}
+      </button>
+    </form>
+  </section>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card empty-state">
+  <span class="feature-icon" aria-hidden="true">{{ icon('check', 28) }}</span>
+  <h2>{{ t('admin.approvals_empty_title') }}</h2>
+  <p class="muted">{{ t('admin.approvals_empty_text') }}</p>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('index.page_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-copy">
+    <p class="eyebrow">{{ t('index.eyebrow') }}</p>
+    <h1>{{ t('index.headline') }}</h1>
+    <p class="lede">{{ t('index.lede') }}</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary btn-lg" href="{{ url_for('auth.register') }}">
+        {{ t('index.cta_button') }} {{ icon('arrow-right', 18) }}
+      </a>
+      <a class="btn btn-outline btn-lg" href="{{ url_for('auth.login') }}">{{ t('nav.sign_in') }}</a>
+    </div>
+    <p class="hero-note">{{ t('index.hero_note') }}</p>
+  </div>
+
+  <div class="hero-panel" aria-hidden="true">
+    <div class="panel-card">
+      <div class="panel-head">
+        <span class="dot dot-admin"></span> {{ t('role.admin') }}
+        <span class="panel-chip">{{ t('index.admin_chip') }}</span>
+      </div>
+      <ul class="panel-list">
+        <li>{{ icon('users', 16) }} {{ t('index.admin_one') }}</li>
+        <li>{{ icon('shield', 16) }} {{ t('index.admin_two') }}</li>
+        <li>{{ icon('gauge', 16) }} {{ t('index.admin_three') }}</li>
+      </ul>
+    </div>
+    <div class="panel-card">
+      <div class="panel-head">
+        <span class="dot dot-seller"></span> {{ t('role.seller') }}
+        <span class="panel-chip">{{ t('index.seller_chip') }}</span>
+      </div>
+      <ul class="panel-list">
+        <li>{{ icon('store', 16) }} {{ t('index.seller_one') }}</li>
+        <li>{{ icon('chart', 16) }} {{ t('index.seller_two') }}</li>
+        <li>{{ icon('ban', 16) }} {{ t('index.seller_three') }}</li>
+      </ul>
+    </div>
+    <div class="panel-card">
+      <div class="panel-head">
+        <span class="dot dot-buyer"></span> {{ t('role.buyer') }}
+        <span class="panel-chip">{{ t('index.buyer_chip') }}</span>
+      </div>
+      <ul class="panel-list">
+        <li>{{ icon('cart', 16) }} {{ t('index.buyer_one') }}</li>
+        <li>{{ icon('list', 16) }} {{ t('index.buyer_two') }}</li>
+        <li>{{ icon('ban', 16) }} {{ t('index.buyer_three') }}</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">{{ t('index.features_title') }}</h2>
+  <div class="feature-grid">
+    <article class="feature-card">
+      <span class="feature-icon">{{ icon('lock', 22) }}</span>
+      <h3>{{ t('index.feature_one_title') }}</h3>
+      <p>{{ t('index.feature_one_text') }}</p>
+    </article>
+    <article class="feature-card">
+      <span class="feature-icon">{{ icon('eye', 22) }}</span>
+      <h3>{{ t('index.feature_two_title') }}</h3>
+      <p>{{ t('index.feature_two_text') }}</p>
+    </article>
+    <article class="feature-card">
+      <span class="feature-icon">{{ icon('users', 22) }}</span>
+      <h3>{{ t('index.feature_three_title') }}</h3>
+      <p>{{ t('index.feature_three_text') }}</p>
+    </article>
+    <article class="feature-card">
+      <span class="feature-icon">{{ icon('key', 22) }}</span>
+      <h3>{{ t('index.feature_four_title') }}</h3>
+      <p>{{ t('index.feature_four_text') }}</p>
+    </article>
+  </div>
+</section>
+
+<section class="section section-cta">
+  <div class="cta-panel">
+    <div>
+      <h2>{{ t('index.cta_title') }}</h2>
+      <p>{{ t('index.cta_text') }}</p>
+    </div>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('auth.register') }}">
+      {{ t('index.cta_button') }} {{ icon('arrow-right', 18) }}
+    </a>
+  </div>
+</section>
+{% endblock %}

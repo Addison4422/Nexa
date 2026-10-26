@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('transactions.seller_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('seller.workspace') }}</p>
+    <h1>{{ t('transactions.seller_title') }}</h1>
+    <p class="muted">{{ t('transactions.seller_subtitle') }}</p>
+  </div>
+</div>
+
+{% if rows %}
+<div class="table-wrap">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th scope="col">{{ t('transactions.col_reference') }}</th>
+        <th scope="col">{{ t('transactions.col_buyer') }}</th>
+        <th scope="col">{{ t('transactions.col_items') }}</th>
+        <th scope="col">{{ t('transactions.col_date') }}</th>
+        <th scope="col" style="text-align:end">{{ t('transactions.col_amount') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td><code>{{ row['reference'] }}</code></td>
+        <td>
+          <div class="mini-main">
+            <div class="mini-title">{{ row['buyer_name'] }}</div>
+            <div class="muted small">@{{ row['buyer_username'] }} · {{ row['buyer_email'] }}</div>
+          </div>
+        </td>
+        <td>{{ row['items'] }}</td>
+        <td>{{ (row['paid_at'] or row['created_at'])|datetime }}</td>
+        <td style="text-align:end">{{ row['amount_cents']|money }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card empty-card">
+  <span class="empty-icon">{{ icon('list', 48) }}</span>
+  <h2>{{ t('transactions.seller_empty_title') }}</h2>
+  <p>{{ t('transactions.seller_empty_text') }}</p>
+</div>
+{% endif %}
+{% endblock %}

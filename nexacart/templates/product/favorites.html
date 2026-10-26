@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('fav.page_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('nav.account') }}</p>
+    <h1>{{ t('fav.title') }}</h1>
+    <p class="muted">{{ t('fav.subtitle') }}</p>
+  </div>
+  <div class="page-head-actions">
+    <a class="btn btn-outline btn-sm" href="{{ url_for('product.catalogue') }}">{{ icon('shop', 16) }} {{ t('nav.shop')
+      }}</a>
+  </div>
+</div>
+
+{% if not products %}
+<div class="card empty-card">
+  <span class="empty-icon">{{ icon('heart', 48) }}</span>
+  <h2>{{ t('fav.empty_title') }}</h2>
+  <p>{{ t('fav.empty_text') }}</p>
+  <a class="btn btn-primary" href="{{ url_for('product.catalogue') }}">
+    {{ t('cart.continue_shopping') }} {{ icon('arrow-right', 16) }}
+  </a>
+</div>
+{% else %}
+<div class="product-grid">
+  {% for product in products %}
+  {% set image_url = url_for('product.product_image', filename=product['image_path']) if product['image_path'] else ''
+  %}
+  <article class="product-card" tabindex="0">
+    <button class="fav-btn is-fav" type="button"
+      data-fav-url="{{ url_for('product.toggle_favorite', product_id=product['id']) }}"
+      data-label-add="{{ t('fav.add') }}" data-label-remove="{{ t('fav.remove') }}" aria-label="{{ t('fav.remove') }}">
+      {{ icon('heart', 17) }}
+    </button>
+    <div class="product-media">
+      {% if image_url %}
+      <img src="{{ image_url }}" alt="{{ product['name'] }}" loading="lazy">
+      {% else %}
+      <div class="product-placeholder">{{ icon('store', 32) }}</div>
+      {% endif %}
+      <div class="product-badges">
+        {% if product['stock_quantity'] <= 0 %} <span class="product-badge out-of-stock">{{ t('product.out_of_stock')
+          }}</span>
+          {% else %}
+          <span class="product-badge stock">{{ t('product.in_stock', n=product['stock_quantity']) }}</span>
+          {% endif %}
+          {% if product['discount_percent'] and product['discount_percent'] > 0 %}
+          <span class="product-badge product-badge-discount">-{{ product['discount_percent'] }}%</span>
+          {% endif %}
+      </div>
+        <div class="product-quickview" aria-hidden="true">
+          <p class="quickview-desc">{{ (product['description'] or t('product.no_description'))|truncate(140) }}</p>
+          <p class="quickview-seller">{{ icon('store', 14) }} {{ product['seller_business'] or
+            product['seller_username'] }}</p>
+        </div>
+    </div>
+    <div class="product-body">
+      <h3 class="product-name">{{ product['name'] }}</h3>
+      <p class="product-seller small">{{ icon('store', 13) }} {{ product['seller_business'] or
+        product['seller_username'] }}</p>
+      {% if product['discount_percent'] and product['discount_percent'] > 0 %}
+      <p class="product-price-row">
+        <span class="product-price product-price-sale">{{ product|after_discount|money }}</span>
+        <span class="product-price-was">{{ product['price_cents']|money }}</span>
+      </p>
+      {% else %}
+      <p class="product-price-row"><span class="product-price">{{ product['price_cents']|money }}</span></p>
+      {% endif %}
+      <div class="product-footer">
+        {% if current_user and current_user['role'] == 'buyer' and product['stock_quantity'] > 0 %}
+        <form class="add-to-cart-form" action="{{ url_for('cart.add') }}" method="post"
+          data-text-adding="{{ t('cart.flash.adding') }}…" data-text-added="{{ t('cart.flash.added_short') }}"
+          data-text-error="{{ t('cart.err.add_failed') }}">
+          <input type="hidden" name="product_id" value="{{ product['id'] }}">
+          <input type="hidden" name="quantity" value="1">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-primary btn-sm add-to-cart-btn" type="submit">{{ t('product.add_to_cart') }}</button>
+        </form>
+        {% else %}
+        <a class="btn btn-outline btn-sm" href="{{ url_for('product.product_detail', product_id=product['id']) }}">{{
+          t('product.view') }}</a>
+        {% endif %}
+      </div>
+    </div>
+  </article>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

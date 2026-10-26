@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('admin.requests_title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('admin.approvals_eyebrow') }}</p>
+    <h1>{{ t('admin.requests_title') }}</h1>
+    <p class="muted">{{ t('admin.requests_lead') }}</p>
+  </div>
+</div>
+
+{% if approvals %}
+<section class="card" style="margin-bottom: var(--space-5);">
+  <header class="card-head">
+    <span class="feature-icon" aria-hidden="true">{{ icon('users', 22) }}</span>
+    <h2>{{ t('admin.approvals_title') }} <span class="badge-count">{{ approvals|length }}</span></h2>
+  </header>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th scope="col">{{ t('admin.col_user') }}</th>
+          <th scope="col">{{ t('admin.col_role') }}</th>
+          <th scope="col">{{ t('admin.col_actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for req in approvals %}
+        <tr>
+          <td>
+            <div class="mini-main">
+              <div class="mini-title">{{ req['full_name'] }} (@{{ req['username'] }})</div>
+              <div class="muted small">{{ req['email'] }}</div>
+            </div>
+          </td>
+          <td><span class="role-badge role-{{ req['role'] }}">{{ t('role.' ~ req['role']) }}</span></td>
+          <td class="cell-actions">
+            <a class="btn btn-outline btn-sm" href="{{ url_for('admin.approvals') }}">{{ t('admin.manage') }}</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+{% if resets %}
+<section class="card" style="margin-bottom: var(--space-5);">
+  <header class="card-head">
+    <span class="feature-icon" aria-hidden="true">{{ icon('key', 22) }}</span>
+    <h2>{{ t('admin.resets_title') }} <span class="badge-count">{{ resets|length }}</span></h2>
+  </header>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th scope="col">{{ t('admin.col_user') }}</th>
+          <th scope="col">{{ t('admin.col_actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in resets %}
+        <tr>
+          <td>
+            <div class="mini-main">
+              <div class="mini-title">{{ user['full_name'] }} (@{{ user['username'] }})</div>
+              <div class="muted small">{{ user['email'] }}</div>
+            </div>
+          </td>
+          <td class="cell-actions">
+            <a class="btn btn-outline btn-sm" href="{{ url_for('admin.password_resets') }}">{{ t('admin.resets_title')
+              }}</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+{% if pending_complaints %}
+<section class="card" style="margin-bottom: var(--space-5);">
+  <header class="card-head">
+    <span class="feature-icon" aria-hidden="true">{{ icon('alert', 22) }}</span>
+    <h2>{{ t('complaints.title') }} <span class="badge-count">{{ pending_complaints|length }}</span></h2>
+  </header>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th scope="col">{{ t('admin.col_reporter') }}</th>
+          <th scope="col">{{ t('admin.col_category') }}</th>
+          <th scope="col">{{ t('complaints.detail') }}</th>
+          <th scope="col">{{ t('admin.col_actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for complaint in pending_complaints %}
+        <tr>
+          <td>@{{ complaint['reporter_username'] }}
+            <span class="role-badge role-{{ complaint['reporter_role'] }}">{{ t('role.' ~ complaint['reporter_role']) }}</span>
+          </td>
+          <td>{{ t('complaint.' ~ complaint['category']) }}</td>
+          <td class="muted small">{{ complaint['detail'] or '—' }}</td>
+          <td class="cell-actions">
+            <a class="btn btn-outline btn-sm" href="{{ url_for('admin.complaints') }}">{{ t('admin.manage_reports') }}</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+{% set pending_payouts = payouts | selectattr('status', 'equalto', 'requested') | list %}
+{% if pending_payouts %}
+<section class="card">
+  <header class="card-head">
+    <span class="feature-icon" aria-hidden="true">{{ icon('currency', 22) }}</span>
+    <h2>{{ t('earnings.payouts_title') }} <span class="badge-count">{{ pending_payouts|length }}</span></h2>
+  </header>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th scope="col">{{ t('admin.col_user') }}</th>
+          <th scope="col" style="text-align:end">{{ t('transactions.col_amount') }}</th>
+          <th scope="col">{{ t('admin.col_actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for payout in pending_payouts %}
+        <tr>
+          <td>@{{ payout['username'] }}</td>
+          <td style="text-align:end">{{ payout['amount_cents']|money }}</td>
+          <td class="cell-actions">
+            <form method="post" class="approval-form"
+              action="{{ url_for('admin.process_payout', payout_id=payout['id']) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-primary btn-sm" name="decision" value="paid">{{ t('payouts.mark_paid') }}</button>
+              <button class="btn btn-danger btn-sm" name="decision" value="rejected">{{ t('admin.reject') }}</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+{% if not approvals and not resets and not pending_payouts and not pending_complaints %}
+<div class="card empty-card">
+  <span class="empty-icon">{{ icon('check', 48) }}</span>
+  <h2>{{ t('admin.requests_empty_title') }}</h2>
+  <p>{{ t('admin.requests_empty_text') }}</p>
+</div>
+{% endif %}
+{% endblock %}

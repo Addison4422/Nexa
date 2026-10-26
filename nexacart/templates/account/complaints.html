@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% from "partials/_icons.html" import icon %}
+{% block title %}{{ t('complaints.title', name=app_name) }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">{{ t('nav.account') }}</p>
+    <h1>{{ t('complaints.title') }}</h1>
+    <p class="muted">{{ t('complaints.subtitle') }}</p>
+  </div>
+</div>
+
+<section class="card" style="max-width: 640px;">
+  <header class="card-head">
+    <span class="feature-icon" aria-hidden="true">{{ icon('alert', 22) }}</span>
+    <h2>{{ t('complaints.file_title') }}</h2>
+  </header>
+  <form method="post" class="stacked-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="form-field">
+      <label for="category">{{ t('complaints.category') }}</label>
+      <select class="input" id="category" name="category" required>
+        {% for category in categories %}
+        <option value="{{ category }}">{{ t('complaint.' ~ category) }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-field">
+      <label for="detail">{{ t('complaints.detail') }}</label>
+      <textarea class="input" id="detail" name="detail" rows="3" maxlength="1000"></textarea>
+      <p class="hint">{{ t('complaints.detail_hint') }}</p>
+    </div>
+    <button class="btn btn-primary" type="submit">{{ icon('arrow-right', 16) }} {{ t('complaints.submit') }}</button>
+  </form>
+</section>
+
+<section class="card" style="margin-top: var(--space-5);">
+  <header class="card-head">
+    <span class="feature-icon" aria-hidden="true">{{ icon('list', 22) }}</span>
+    <h2>{{ t('complaints.history_title') }}</h2>
+  </header>
+  {% if complaints %}
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th scope="col">{{ t('complaints.category') }}</th>
+          <th scope="col">{{ t('transactions.col_date') }}</th>
+          <th scope="col">{{ t('transactions.col_status') }}</th>
+          <th scope="col">{{ t('complaints.feedback') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for complaint in complaints %}
+        <tr>
+          <td>{{ t('complaint.' ~ complaint['category']) }}</td>
+          <td>{{ complaint['created_at']|datetime }}</td>
+          <td>
+            {% if complaint['status'] == 'resolved' %}
+            <span class="status-pill status-active">{{ t('complaints.resolved') }}</span>
+            {% else %}
+            <span class="status-pill status-warning">{{ t('complaints.pending') }}</span>
+            {% endif %}
+          </td>
+          <td>{{ complaint['feedback'] or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted">{{ t('complaints.none_yet') }}</p>
+  {% endif %}
+</section>
+{% endblock %}
